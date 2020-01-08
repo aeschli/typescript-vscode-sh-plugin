@@ -1,0 +1,13 @@
+
+.DS_Store
+.project
+*.log
+
+# Dependencies
+node_modules
+
+# Intermediary compilation files
+out
+
+# Deployment files
+lib

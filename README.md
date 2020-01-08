@@ -1,0 +1,1 @@
+TypeScript plugin that provides richer semantic highlighing

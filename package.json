@@ -1,0 +1,15 @@
+{
+  "name": "typescript-vscode-sh-plugin",
+  "version": "0.1.0",
+  "description": "TypeScript plugin that provides richer semantic highlighing",
+  "main": "out/index.js",
+  "scripts": {
+    "compile": "tsc"
+  },
+  "author": "Microsoft",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^12.12.0",
+    "typescript": "^3.7.4"
+  }
+}
