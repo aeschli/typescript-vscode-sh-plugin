@@ -1,5 +1,5 @@
 {
-  "name": "@aeschli/typescript-vscode-sh-plugin",
+  "name": "typescript-vscode-sh-plugin",
   "version": "0.2.0",
   "description": "TypeScript plugin that provides richer semantic highlighing",
   "main": "out/index.js",
@@ -11,9 +11,6 @@
   },
   "author": "Microsoft",
   "license": "MIT",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/aeschli/typescript-vscode-sh-plugin.git"
