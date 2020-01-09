@@ -4,8 +4,10 @@
   "description": "TypeScript plugin that provides richer semantic highlighing",
   "main": "out/index.js",
   "scripts": {
-    "prepublish": "npm run compile",
-    "compile": "tsc"
+    "prepublishOnly": "npm run compile",
+    "compile": "tsc",
+    "preversion": "npm run compile",
+    "postversion": "git push && git push --tags"
   },
   "author": "Microsoft",
   "license": "MIT",
