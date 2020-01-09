@@ -1,0 +1,9 @@
+.npmignore
+/src
+/out/**/*.map
+tsconfig.json
+.vscode
+.project
+node_modules
+*.test.js
+*.js.map

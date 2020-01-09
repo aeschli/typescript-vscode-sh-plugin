@@ -4,10 +4,18 @@
   "description": "TypeScript plugin that provides richer semantic highlighing",
   "main": "out/index.js",
   "scripts": {
+    "prepublish": "npm run compile",
     "compile": "tsc"
   },
   "author": "Microsoft",
   "license": "MIT",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aeschli/typescript-vscode-sh-plugin"
+  },
   "devDependencies": {
     "@types/node": "^12.12.0",
     "typescript": "^3.7.4"
