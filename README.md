@@ -1,26 +1,28 @@
 A [TypeScript plugin](https://github.com/Microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin) that replaces `getEncodedSemanticClassifications` and `getEncodedSyntacticClassifications` to provide more classifications.
 
-New clssifications are returned. Each classification is a combination of a TokenType with any number of TokenModifiers.
+The plugin uses new token classifications, consisting of a `TokenType` and with any number of `TokenModifier`.
+All new classifications have a value >= 0x100 and consist of the sum of the TokenType enum value and TokenModifier enum values defined as follows:
 
 ```ts
 const enum TokenType {
-	'class' = 0x1000,
-	'enum' = 0x2000,
-	'interface' = 0x3000,
-	'namespace' = 0x4000,
-	'typeParameter' = 0x5000,
-	'type' = 0x6000,
-	'parameter' = 0x7000,
-	'variable' = 0x8000,
-	'property' = 0x9000,
-	'constant' = 0xA000,
-	'function' = 0xB000,
-	'member' = 0xC000,
+	'class' = 0x100,
+	'enum' = 0x200,
+	'interface' = 0x300,
+	'namespace' = 0x400,
+	'typeParameter' = 0x500,
+	'type' = 0x600,
+	'parameter' = 0x700,
+	'variable' = 0x800,
+	'property' = 0x900,
+	'constant' = 0xA00,
+	'function' = 0xB00,
+	'member' = 0xC00
 }
 
 const enum TokenModifier {
-	'declaration' = 0x0001,
-	'static' = 0x0002,
-	'async' = 0x0004
+	'declaration' = 0x01,
+	'static' = 0x02,
+	'async' = 0x04
 }
+
 ```
