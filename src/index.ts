@@ -75,27 +75,30 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 				if (ts.isIdentifier(node)) {
 					const symbol = typeChecker.getSymbolAtLocation(node);
 					if (symbol) {
-						const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
-						if (decl) {
-							let typeIdx = tokenFromDeclarationMapping[decl.kind];
-							if (typeIdx !== undefined) {
-								let modifierSet = 0;
-								if (node.parent) {
-									const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
-									if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
-										modifierSet = TokenModifier.declaration;
-									}
+						let typeIdx = classifySymbol(symbol);
+						if (typeIdx !== undefined) {
+							let modifierSet = 0;
+							if (node.parent) {
+								const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
+								if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
+									modifierSet = TokenModifier.declaration;
 								}
-								const modifiers = ts.getCombinedModifierFlags(decl);
-								if (modifiers & ts.ModifierFlags.Static) {
-									modifierSet |= TokenModifier.static;
-								}
-								if (modifiers & ts.ModifierFlags.Async) {
-									modifierSet |= TokenModifier.async;
-								}
-								resultTokens.push(node.getStart(), node.getWidth(), typeIdx + modifierSet);
 							}
+							const decl = symbol.valueDeclaration;
+							const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
+							const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
+							if (modifiers & ts.ModifierFlags.Static) {
+								modifierSet |= TokenModifier.static;
+							}
+							if (modifiers & ts.ModifierFlags.Async) {
+								modifierSet |= TokenModifier.async;
+							}
+							if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
+								modifierSet |= TokenModifier.readonly;
+							}
+							resultTokens.push(node.getStart(), node.getWidth(), typeIdx + modifierSet);
 						}
+
 					}
 				}
 				ts.forEachChild(node, visit);
@@ -107,6 +110,26 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		}
 
 		return resultTokens;
+	}
+
+	function classifySymbol(symbol: ts.Symbol) {
+
+		const flags = symbol.getFlags();
+		if (flags & ts.SymbolFlags.Class) {
+			return TokenType.class;
+		} else if (flags & ts.SymbolFlags.Enum) {
+			return TokenType.enum;
+		} else if (flags & ts.SymbolFlags.TypeAlias) {
+			return TokenType.type;
+		} else if (flags & ts.SymbolFlags.Type) {
+			if (flags & ts.SymbolFlags.Interface) {
+				return TokenType.interface;
+			} if (flags & ts.SymbolFlags.TypeParameter) {
+				return TokenType.typeParameter;
+			}
+		}
+		const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
+		return tokenFromDeclarationMapping[decl.kind];
 	}
 
 	return {
@@ -136,5 +159,6 @@ const enum TokenType {
 const enum TokenModifier {
 	'declaration' = 0x01,
 	'static' = 0x02,
-	'async' = 0x04
+	'async' = 0x04,
+	'readonly' = 0x08
 }
