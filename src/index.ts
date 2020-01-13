@@ -129,7 +129,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			}
 		}
 		const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
-		return tokenFromDeclarationMapping[decl.kind];
+		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
 
 	return {
