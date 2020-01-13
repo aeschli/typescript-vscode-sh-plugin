@@ -8,9 +8,19 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 	const ts = modules.typescript;
 
+	function hasVersion(requiredMajor: number, requiredMinor: number) {
+		const parts = ts.version.split('.');
+		const majorVersion = Number(parts[0]);
+		return majorVersion < requiredMajor || ((majorVersion === requiredMajor) && requiredMinor <= Number(parts[1]));
+	}
+
 	function decorate(languageService: ts.LanguageService) {
 
 		const intercept: Partial<ts.LanguageService> = Object.create(null);
+
+		if (!hasVersion(3, 7)) {
+			return languageService;
+		}
 
 		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
 			return {
