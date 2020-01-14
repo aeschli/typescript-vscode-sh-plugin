@@ -1,10 +1,10 @@
+
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-const REQUIRED_MAJOR_VERSION = 3;
-const REQUIRED_MINOR_VERSION = 7;
+import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
 	console.log('typescript-vscode-sh-plugin initialized');
@@ -20,8 +20,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 		const intercept: Partial<ts.LanguageService> = Object.create(null);
 
-		if (!hasVersion(REQUIRED_MAJOR_VERSION, REQUIRED_MINOR_VERSION)) {
-			console.log(`typescript-vscode-sh-plugin not active, version ${REQUIRED_MAJOR_VERSION}.${REQUIRED_MINOR_VERSION} required, is ${ts.version}`);
+		if (!hasVersion(VersionRequirement.major, VersionRequirement.minor)) {
+			console.log(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`);
 			return languageService;
 		}
 		console.log(`Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`);
@@ -85,22 +85,22 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							if (node.parent) {
 								const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
 								if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
-									modifierSet = TokenModifier.declaration;
+									modifierSet = 1 << TokenModifier.declaration;
 								}
 							}
 							const decl = symbol.valueDeclaration;
 							const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
 							const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
 							if (modifiers & ts.ModifierFlags.Static) {
-								modifierSet |= TokenModifier.static;
+								modifierSet |= 1 << TokenModifier.static;
 							}
 							if (modifiers & ts.ModifierFlags.Async) {
-								modifierSet |= TokenModifier.async;
+								modifierSet |= 1 << TokenModifier.async;
 							}
 							if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
-								modifierSet |= TokenModifier.readonly;
+								modifierSet |= 1 << TokenModifier.readonly;
 							}
-							resultTokens.push(node.getStart(), node.getWidth(), typeIdx + modifierSet);
+							resultTokens.push(node.getStart(), node.getWidth(), ((typeIdx + 1) << TokenEncodingConsts.typeOffset) + modifierSet);
 						}
 
 					}
@@ -145,24 +145,3 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 	};
 };
 
-const enum TokenType {
-	'class' = 0x100,
-	'enum' = 0x200,
-	'interface' = 0x300,
-	'namespace' = 0x400,
-	'typeParameter' = 0x500,
-	'type' = 0x600,
-	'parameter' = 0x700,
-	'variable' = 0x800,
-	'property' = 0x900,
-	'constant' = 0xA00,
-	'function' = 0xB00,
-	'member' = 0xC00
-}
-
-const enum TokenModifier {
-	'declaration' = 0x01,
-	'static' = 0x02,
-	'async' = 0x04,
-	'readonly' = 0x08
-}

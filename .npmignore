@@ -1,6 +1,6 @@
 .npmignore
 /src
-/out/**/*.map
+/lib/**/*.map
 tsconfig.json
 .vscode
 .project

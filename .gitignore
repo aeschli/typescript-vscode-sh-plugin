@@ -7,7 +7,4 @@
 node_modules
 
 # Intermediary compilation files
-out
-
-# Deployment files
 lib
