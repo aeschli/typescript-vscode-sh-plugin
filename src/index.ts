@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
-	console.log('typescript-vscode-sh-plugin initialized, replacing getEncodedSemanticClassifications and getEncodedSyntacticClassifications.');
+const REQUIRED_MAJOR_VERSION = 3;
+const REQUIRED_MINOR_VERSION = 7;
 
+export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
+	console.log('typescript-vscode-sh-plugin initialized');
 	const ts = modules.typescript;
 
 	function hasVersion(requiredMajor: number, requiredMinor: number) {
@@ -18,9 +20,11 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 		const intercept: Partial<ts.LanguageService> = Object.create(null);
 
-		if (!hasVersion(3, 7)) {
+		if (!hasVersion(REQUIRED_MAJOR_VERSION, REQUIRED_MINOR_VERSION)) {
+			console.log(`typescript-vscode-sh-plugin not active, version ${REQUIRED_MAJOR_VERSION}.${REQUIRED_MINOR_VERSION} required, is ${ts.version}`);
 			return languageService;
 		}
+		console.log(`Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`);
 
 		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
 			return {
