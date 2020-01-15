@@ -47,27 +47,18 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		});
 	}
 
-	const tokenFromDeclarationMapping: { [name: string]: TokenType } = {
-		[ts.SyntaxKind.VariableDeclaration]: TokenType.variable,
-		[ts.SyntaxKind.Parameter]: TokenType.parameter,
-		[ts.SyntaxKind.PropertyDeclaration]: TokenType.property,
-		[ts.SyntaxKind.ModuleDeclaration]: TokenType.namespace,
-		[ts.SyntaxKind.EnumDeclaration]: TokenType.enum,
-		[ts.SyntaxKind.EnumMember]: TokenType.property,
-		[ts.SyntaxKind.ClassDeclaration]: TokenType.class,
-		[ts.SyntaxKind.MethodDeclaration]: TokenType.member,
-		[ts.SyntaxKind.FunctionDeclaration]: TokenType.function,
-		[ts.SyntaxKind.MethodSignature]: TokenType.member,
-		[ts.SyntaxKind.GetAccessor]: TokenType.property,
-		[ts.SyntaxKind.PropertySignature]: TokenType.property,
-		[ts.SyntaxKind.InterfaceDeclaration]: TokenType.interface,
-		[ts.SyntaxKind.TypeAliasDeclaration]: TokenType.type,
-		[ts.SyntaxKind.TypeParameter]: TokenType.typeParameter
-	};
-
 	function getSemanticTokens(jsLanguageService: ts.LanguageService, fileName: string, span: ts.TextSpan): number[] {
 		let resultTokens: number[] = [];
 
+		const collector = (node: ts.Node, typeIdx: number, modifierSet: number) => {
+			resultTokens.push(node.getStart(), node.getWidth(), ((typeIdx + 1) << TokenEncodingConsts.typeOffset) + modifierSet);
+		};
+		collectTokens(jsLanguageService, fileName, span, collector);
+
+		return resultTokens;
+	}
+
+	function collectTokens(jsLanguageService: ts.LanguageService, fileName: string, span: ts.TextSpan, collector: (node: ts.Node, tokenType: number, tokenModifier: number) => void) {
 		const program = jsLanguageService.getProgram();
 		if (program) {
 			const typeChecker = program.getTypeChecker();
@@ -100,11 +91,11 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
 								modifierSet |= 1 << TokenModifier.readonly;
 							}
-							resultTokens.push(node.getStart(), node.getWidth(), ((typeIdx + 1) << TokenEncodingConsts.typeOffset) + modifierSet);
+							collector(node, typeIdx, modifierSet);
 						}
-
 					}
 				}
+
 				ts.forEachChild(node, visit);
 			}
 			const sourceFile = program.getSourceFile(fileName);
@@ -112,12 +103,9 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 				visit(sourceFile);
 			}
 		}
-
-		return resultTokens;
 	}
 
 	function classifySymbol(symbol: ts.Symbol) {
-
 		const flags = symbol.getFlags();
 		if (flags & ts.SymbolFlags.Class) {
 			return TokenType.class;
@@ -135,6 +123,25 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
 		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
+
+
+	const tokenFromDeclarationMapping: { [name: string]: TokenType } = {
+		[ts.SyntaxKind.VariableDeclaration]: TokenType.variable,
+		[ts.SyntaxKind.Parameter]: TokenType.parameter,
+		[ts.SyntaxKind.PropertyDeclaration]: TokenType.property,
+		[ts.SyntaxKind.ModuleDeclaration]: TokenType.namespace,
+		[ts.SyntaxKind.EnumDeclaration]: TokenType.enum,
+		[ts.SyntaxKind.EnumMember]: TokenType.property,
+		[ts.SyntaxKind.ClassDeclaration]: TokenType.class,
+		[ts.SyntaxKind.MethodDeclaration]: TokenType.member,
+		[ts.SyntaxKind.FunctionDeclaration]: TokenType.function,
+		[ts.SyntaxKind.MethodSignature]: TokenType.member,
+		[ts.SyntaxKind.GetAccessor]: TokenType.property,
+		[ts.SyntaxKind.PropertySignature]: TokenType.property,
+		[ts.SyntaxKind.InterfaceDeclaration]: TokenType.interface,
+		[ts.SyntaxKind.TypeAliasDeclaration]: TokenType.type,
+		[ts.SyntaxKind.TypeParameter]: TokenType.typeParameter
+	};
 
 	return {
 		create(info: ts.server.PluginCreateInfo) {
