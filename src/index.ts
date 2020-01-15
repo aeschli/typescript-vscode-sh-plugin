@@ -68,8 +68,11 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 					return;
 				}
 				if (ts.isIdentifier(node)) {
-					const symbol = typeChecker.getSymbolAtLocation(node);
+					let symbol = typeChecker.getSymbolAtLocation(node);
 					if (symbol) {
+						if (symbol.flags & ts.SymbolFlags.Alias) {
+							symbol = typeChecker.getAliasedSymbol(symbol);
+						}
 						let typeIdx = classifySymbol(symbol);
 						if (typeIdx !== undefined) {
 							let modifierSet = 0;
@@ -149,6 +152,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		},
 		onConfigurationChanged(_config: any) {
 		},
+		// added for testing
+		decorate(languageService: ts.LanguageService) : ts.LanguageService {
+			return decorate(languageService);
+		}
 	};
 };
 
