@@ -128,39 +128,39 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
 
 suite('HTML Semantic Tokens', () => {
 
-    // test('Variables', () => {
-    //     const input = [
-	// 		/*0*/'  var x = 9, y1 = [x];',
-	// 		/*1*/'  try {',
-	// 		/*2*/'    for (const s of y1) { x = s }',
-	// 		/*3*/'  } catch (e) {',
-	// 		/*4*/'    throw y1;',
-	// 		/*5*/'  }',
-    //     ].join('\n');
-    //     assertTokens('main.ts', { 'main.ts': input }, [
-    //         t(0, 6, 1, 'variable.declaration'), t(0, 13, 2, 'variable.declaration'), t(0, 19, 1, 'variable'),
-    //         t(2, 15, 1, 'variable.declaration.readonly'), t(2, 20, 2, 'variable'), t(2, 26, 1, 'variable'), t(2, 30, 1, 'variable.readonly'),
-    //         t(3, 11, 1, 'variable.declaration'),
-    //         t(4, 10, 2, 'variable')
-    //     ]);
-    // });
+    test('Variables', () => {
+        const input = [
+			/*0*/'  var x = 9, y1 = [x];',
+			/*1*/'  try {',
+			/*2*/'    for (const s of y1) { x = s }',
+			/*3*/'  } catch (e) {',
+			/*4*/'    throw y1;',
+			/*5*/'  }',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 6, 1, 'variable.declaration'), t(0, 13, 2, 'variable.declaration'), t(0, 19, 1, 'variable'),
+            t(2, 15, 1, 'variable.declaration.readonly'), t(2, 20, 2, 'variable'), t(2, 26, 1, 'variable'), t(2, 30, 1, 'variable.readonly'),
+            t(3, 11, 1, 'variable.declaration'),
+            t(4, 10, 2, 'variable')
+        ]);
+    });
 
-    // test('Import', () => {
-    //     const input = [
-    //         /*0*/'import { A, I, f, c } from "./other"',
-    //         /*1*/'A.f = 8 + f() + c;',
-    //     ].join('\n');
-    //     const other = [
-    //         /*0*/'export class A { public static f = 9; }',
-    //         /*1*/'export interface I { }',
-    //         /*2*/'export function f() : number { return 1; }',
-    //         /*3*/'export const c = 9;',
-    //     ].join('\n');
-    //     assertTokens('main.ts', { 'main.ts': input, 'other.ts': other }, [
-    //         t(0, 9, 1, 'class'), t(0, 12, 1, 'interface'), t(0, 15, 1, 'function'), t(0, 18, 1, 'variable.readonly'),
-    //         t(1, 0, 1, 'class'), t(1, 2, 1, 'property.static'), t(1, 10, 1, 'function'), t(1, 16, 1, 'variable.readonly')
-    //     ]);
-    // });
+    test('Import', () => {
+        const input = [
+            /*0*/'import { A, I, f, c } from "./other"',
+            /*1*/'A.f = 8 + f() + c;',
+        ].join('\n');
+        const other = [
+            /*0*/'export class A { public static f = 9; }',
+            /*1*/'export interface I { }',
+            /*2*/'export function f() : number { return 1; }',
+            /*3*/'export const c = 9;',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input, 'other.ts': other }, [
+            t(0, 9, 1, 'class'), t(0, 12, 1, 'interface'), t(0, 15, 1, 'function'), t(0, 18, 1, 'variable.readonly'),
+            t(1, 0, 1, 'class'), t(1, 2, 1, 'property.static'), t(1, 10, 1, 'function'), t(1, 16, 1, 'variable.readonly')
+        ]);
+    });
 
     test('JSX', () => {
         const input = [
