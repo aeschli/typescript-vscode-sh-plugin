@@ -64,10 +64,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			const typeChecker = program.getTypeChecker();
 
 			function visit(node: ts.Node) {
-				if (!node || !ts.textSpanIntersectsWith(span, node.pos, node.getFullWidth())) {
+				if (!node || !ts.textSpanIntersectsWith(span, node.pos, node.getFullWidth()) || node.getFullWidth() === 0) {
 					return;
 				}
-				if (ts.isIdentifier(node)) {
+				if (ts.isIdentifier(node) && !isJSXElementIdentifier(node)) {
 					let symbol = typeChecker.getSymbolAtLocation(node);
 					if (symbol) {
 						if (symbol.flags & ts.SymbolFlags.Alias) {
@@ -127,6 +127,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
 
+	function isJSXElementIdentifier(node: ts.Node) {
+		const parent = node.parent;
+		return parent && (ts.isJsxOpeningElement(parent) || ts.isJsxClosingElement(parent) || ts.isJsxSelfClosingElement(parent));
+	}
 
 	const tokenFromDeclarationMapping: { [name: string]: TokenType } = {
 		[ts.SyntaxKind.VariableDeclaration]: TokenType.variable,
