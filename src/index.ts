@@ -63,11 +63,21 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		if (program) {
 			const typeChecker = program.getTypeChecker();
 
+			let inJSXElement = false;
+
 			function visit(node: ts.Node) {
 				if (!node || !ts.textSpanIntersectsWith(span, node.pos, node.getFullWidth()) || node.getFullWidth() === 0) {
 					return;
 				}
-				if (ts.isIdentifier(node) && !isJSXElementIdentifier(node)) {
+				const prevInJSXElement = inJSXElement;
+				if (ts.isJsxElement(node)) {
+					inJSXElement = true;
+				}
+				if (ts.isJsxExpression(node)) {
+					inJSXElement = false;
+				}
+
+				if (ts.isIdentifier(node) && !inJSXElement) {
 					let symbol = typeChecker.getSymbolAtLocation(node);
 					if (symbol) {
 						if (symbol.flags & ts.SymbolFlags.Alias) {
@@ -100,6 +110,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 				}
 
 				ts.forEachChild(node, visit);
+
+				inJSXElement = prevInJSXElement;
 			}
 			const sourceFile = program.getSourceFile(fileName);
 			if (sourceFile) {
@@ -127,11 +139,6 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
 
-	function isJSXElementIdentifier(node: ts.Node) {
-		const parent = node.parent;
-		return parent && (ts.isJsxOpeningElement(parent) || ts.isJsxClosingElement(parent) || ts.isJsxSelfClosingElement(parent));
-	}
-
 	const tokenFromDeclarationMapping: { [name: string]: TokenType } = {
 		[ts.SyntaxKind.VariableDeclaration]: TokenType.variable,
 		[ts.SyntaxKind.Parameter]: TokenType.parameter,
@@ -157,7 +164,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		onConfigurationChanged(_config: any) {
 		},
 		// added for testing
-		decorate(languageService: ts.LanguageService) : ts.LanguageService {
+		decorate(languageService: ts.LanguageService): ts.LanguageService {
 			return decorate(languageService);
 		}
 	};

@@ -58,10 +58,23 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
     const mainFilePath = sourceRoot + mainFileName;
     const reactPath = require.resolve('@types/react/index.d.ts');
 
-    let compilerOptions: ts.CompilerOptions = { allowNonTsExtensions: true, allowJs: true, lib: ['lib.es6.d.ts'], target: ts.ScriptTarget.Latest, moduleResolution: ts.ModuleResolutionKind.NodeJs, jsx: ts.JsxEmit.React };
+    function findFilePath(moduleName: string) {
+        for (let fileName in files) {
+            if (fileName.startsWith(moduleName + '.')) {
+                return sourceRoot + fileName;
+            }
+        }
+        return undefined;
+    }
+
+    let compilerOptions: ts.CompilerOptions = {
+        allowNonTsExtensions: true, allowJs: true, lib: ['lib.es6.d.ts'],
+        target: ts.ScriptTarget.Latest, moduleResolution: ts.ModuleResolutionKind.NodeJs,
+        jsx: ts.JsxEmit.React, allowSyntheticDefaultImports: true
+    };
     const host: ts.LanguageServiceHost = {
         getCompilationSettings: () => compilerOptions,
-        getScriptFileNames: () => [... Object.keys(files).map(k => sourceRoot + k), reactPath],
+        getScriptFileNames: () => [...Object.keys(files).map(k => sourceRoot + k)],
         getScriptKind: (_fileName) => {
             const ext = path.extname(_fileName);
             switch (ext) {
@@ -85,10 +98,35 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
                 getChangeRange: () => undefined
             };
         },
-        getCurrentDirectory: () => '',
+        getCurrentDirectory: () => __dirname,
+        // getDirectories: ts.sys.getDirectories,
+        // directoryExists: ts.sys.directoryExists,
+        // fileExists: ts.sys.fileExists,
+        // readFile: ts.sys.readFile,
+
+        resolveModuleNames: (moduleNames: string[], containingFile: string): (ts.ResolvedModule | undefined)[] => {
+            const resolvedModules: (ts.ResolvedModule | undefined)[] = [];
+            for (const moduleName of moduleNames) {
+                if (moduleName.startsWith('./')) {
+                    let resolvedFileName = findFilePath(moduleName.substring(2));
+                    if (!resolvedFileName) {
+                        resolvedFileName = path.join(path.dirname(containingFile), moduleName + '.ts');
+                    }
+                    resolvedModules.push({ resolvedFileName });
+                } else if (moduleName === 'react') {
+                    resolvedModules.push({ resolvedFileName: reactPath })
+                } else {
+                    resolvedModules.push(undefined);
+                }
+            }
+            return resolvedModules;
+        },
         getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options)
     };
+
     let languageService = ts.createLanguageService(host);
+
+
     languageService = initPlugin({ typescript: ts }).decorate(languageService);
 
     const mainContent = files[mainFileName];
@@ -166,10 +204,12 @@ suite('HTML Semantic Tokens', () => {
         const input = [
             /*0*/'import React from "react";',
             /*1*/'function () {',
-            /*2*/'  return (<div className="App"></div>);',
+            /*2*/'  return (<div className="App">{React.version}</div>);',
             /*3*/'}',
         ].join('\n');
         assertTokens('main.tsx', { 'main.tsx': input }, [
+            t(0, 7, 5, 'namespace'),
+            t(2, 32, 5, 'namespace'), t(2, 38, 7, 'variable.readonly')
         ]);
     });
 });
