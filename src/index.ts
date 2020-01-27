@@ -7,7 +7,6 @@
 import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
-	console.log('typescript-vscode-sh-plugin initialized');
 	const ts = modules.typescript;
 
 	function hasVersion(requiredMajor: number, requiredMinor: number) {
@@ -16,15 +15,15 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return majorVersion < requiredMajor || ((majorVersion === requiredMajor) && requiredMinor <= Number(parts[1]));
 	}
 
-	function decorate(languageService: ts.LanguageService) {
+	function decorate(languageService: ts.LanguageService, logger?: ts.server.Logger) {
 
 		const intercept: Partial<ts.LanguageService> = Object.create(null);
 
 		if (!hasVersion(VersionRequirement.major, VersionRequirement.minor)) {
-			console.log(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`);
+			logger?.msg(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`, ts.server.Msg.Info);
 			return languageService;
 		}
-		console.log(`Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`);
+		logger?.msg(`typescript-vscode-sh-plugin initialized. Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
 
 		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
 			return {
@@ -159,7 +158,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 	return {
 		create(info: ts.server.PluginCreateInfo) {
-			return decorate(info.languageService);
+			return decorate(info.languageService, info.project.projectService.logger);
 		},
 		onConfigurationChanged(_config: any) {
 		},
