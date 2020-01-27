@@ -150,6 +150,7 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
 
     const sourceFile = languageService.getProgram()?.getSourceFile(mainFilePath)!;
     let actualRanges = [];
+    let snippet = '';
     let i = 0;
     while (i < result.spans.length) {
         const start = result.spans[i++], len = result.spans[i++], classification = result.spans[i++];
@@ -159,8 +160,9 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
 
         const tokenClassifiction = [tokenTypes[typeIdx], ...tokenModifiers.filter((_, i) => modSet & 1 << i)].join('.');
         actualRanges.push(t(lineAndChar.line, lineAndChar.character, len, tokenClassifiction));
+        snippet += `t(${lineAndChar.line}, ${lineAndChar.character}, ${len}, '${tokenClassifiction}'), `;
     }
-    assert.deepEqual(actualRanges, expected);
+    assert.deepEqual(actualRanges, expected, snippet);
 
 }
 
@@ -210,6 +212,20 @@ suite('HTML Semantic Tokens', () => {
         assertTokens('main.tsx', { 'main.tsx': input }, [
             t(0, 7, 5, 'namespace'),
             t(2, 32, 5, 'namespace'), t(2, 38, 7, 'variable.readonly')
+        ]);
+    });
+
+
+    test('JSX2', () => {
+        const input = [
+            /*0*/'const MyComponent = (props) => <div></div>',
+            /*1*/'const ItemPrice = (props) => {',
+            /*2*/'  return <MyComponent { ...props } />;',
+            /*3*/'}',
+        ].join('\n');
+        assertTokens('main.tsx', { 'main.tsx': input }, [
+            t(0, 6, 11, 'variable.declaration.readonly'), t(0, 21, 5, 'parameter.declaration'),
+            t(1, 6, 9, 'variable.declaration.readonly'), t(1, 19, 5, 'parameter.declaration')
         ]);
     });
 });

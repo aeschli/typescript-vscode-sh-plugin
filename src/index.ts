@@ -70,7 +70,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 					return;
 				}
 				const prevInJSXElement = inJSXElement;
-				if (ts.isJsxElement(node)) {
+				if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
 					inJSXElement = true;
 				}
 				if (ts.isJsxExpression(node)) {
