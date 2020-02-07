@@ -220,6 +220,19 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
+    test('Object Properties', () => {
+        const input = [
+			/*0*/'let x = 1, y = 1;',
+			/*1*/'const a1 = { e: 1 };',
+			/*2*/'var a2 = { x };'
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 4, 1, 'variable.declaration'), t(0, 11, 1, 'variable.declaration'),
+            t(1, 6, 2, 'variable.declaration.readonly'), t(1, 13, 1, 'property.declaration'),
+            t(2, 4, 2, 'variable.declaration')
+        ]);
+    });
+
     test('Interfaces', () => {
         const input = [
 			/*0*/'interface Position { x: number, y: number };',
@@ -227,8 +240,8 @@ suite('HTML Semantic Tokens', () => {
 			/*2*/'const foo = (o: Position) => o.x + o.y;',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
-            t(0, 10, 8, 'interface.declaration'), t(0, 21, 1, 'property.declaration'), t(0, 32, 1, 'property.declaration'), 
-            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 28, 8, 'interface'), 
+            t(0, 10, 8, 'interface.declaration'), t(0, 21, 1, 'property.declaration'), t(0, 32, 1, 'property.declaration'),
+            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 12, 1, 'property.declaration'), t(1, 18, 1, 'property.declaration'), t(1, 28, 8, 'interface'),
             t(2, 6, 3, 'variable.declaration.readonly'), t(2, 13, 1, 'parameter.declaration'), t(2, 16, 8, 'interface'), t(2, 29, 1, 'parameter'), t(2, 31, 1, 'property'), t(2, 35, 1, 'parameter'), t(2, 37, 1, 'property')
         ]);
     });
