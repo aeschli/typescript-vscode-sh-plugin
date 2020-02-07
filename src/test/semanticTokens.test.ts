@@ -191,12 +191,16 @@ suite('HTML Semantic Tokens', () => {
 			/*0*/'function foo(p1) {',
 			/*1*/'  return foo(Math.abs(p1))',
 			/*2*/'}',
-			/*3*/'`/${window.location}`.split("/").forEach(s => foo(s));',
+            /*3*/'`/${window.location}`.split("/").forEach(s => foo(s));',
+            /*4*/'const match = (s: string) => s.length;',
+            /*4*/'const other = match',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 9, 3, 'function.declaration'), t(0, 13, 2, 'parameter.declaration'),
             t(1, 9, 3, 'function'), t(1, 13, 4, 'interface'), t(1, 18, 3, 'member'), t(1, 22, 2, 'parameter'),
-            t(3, 4, 6, 'variable'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member'), t(3, 33, 7, 'member'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
+            t(3, 4, 6, 'variable'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member'), t(3, 33, 7, 'member'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter'),
+            t(4, 6, 5, 'function.declaration.readonly'), t(4, 15, 1, 'parameter.declaration'), t(4, 29, 1, 'parameter'), t(4, 31, 6, 'property.readonly'),
+            t(5, 6, 5, 'function.declaration.readonly'), t(5, 14, 5, 'function.readonly')
         ]);
     });
 
@@ -242,7 +246,7 @@ suite('HTML Semantic Tokens', () => {
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 10, 8, 'interface.declaration'), t(0, 21, 1, 'property.declaration'), t(0, 32, 1, 'property.declaration'),
             t(1, 6, 1, 'variable.declaration.readonly'), t(1, 12, 1, 'property.declaration'), t(1, 18, 1, 'property.declaration'), t(1, 28, 8, 'interface'),
-            t(2, 6, 3, 'variable.declaration.readonly'), t(2, 13, 1, 'parameter.declaration'), t(2, 16, 8, 'interface'), t(2, 29, 1, 'parameter'), t(2, 31, 1, 'property'), t(2, 35, 1, 'parameter'), t(2, 37, 1, 'property')
+            t(2, 6, 3, 'function.declaration.readonly'), t(2, 13, 1, 'parameter.declaration'), t(2, 16, 8, 'interface'), t(2, 29, 1, 'parameter'), t(2, 31, 1, 'property'), t(2, 35, 1, 'parameter'), t(2, 37, 1, 'property')
         ]);
     });
 
@@ -317,8 +321,8 @@ suite('HTML Semantic Tokens', () => {
             /*3*/'}',
         ].join('\n');
         assertTokens('main.tsx', { 'main.tsx': input }, [
-            t(0, 6, 11, 'variable.declaration.readonly'), t(0, 21, 5, 'parameter.declaration'),
-            t(1, 6, 9, 'variable.declaration.readonly'), t(1, 19, 5, 'parameter.declaration')
+            t(0, 6, 11, 'function.declaration.readonly'), t(0, 21, 5, 'parameter.declaration'),
+            t(1, 6, 9, 'function.declaration.readonly'), t(1, 19, 5, 'parameter.declaration')
         ]);
     });
 });
