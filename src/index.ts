@@ -144,7 +144,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		[ts.SyntaxKind.PropertyDeclaration]: TokenType.property,
 		[ts.SyntaxKind.ModuleDeclaration]: TokenType.namespace,
 		[ts.SyntaxKind.EnumDeclaration]: TokenType.enum,
-		[ts.SyntaxKind.EnumMember]: TokenType.property,
+		[ts.SyntaxKind.EnumMember]: TokenType.enumMember,
 		[ts.SyntaxKind.ClassDeclaration]: TokenType.class,
 		[ts.SyntaxKind.MethodDeclaration]: TokenType.member,
 		[ts.SyntaxKind.FunctionDeclaration]: TokenType.function,

@@ -7,7 +7,7 @@
 // TSClassification = (TokenType + 1) << 8 + TokenModifier
 
 export const enum TokenType {
-	class, enum, interface, namespace, typeParameter, type, parameter, variable, property, function, member, _
+	class, enum, interface, namespace, typeParameter, type, parameter, variable, enumMember, property, function, member, _
 }
 
 export const enum TokenModifier {

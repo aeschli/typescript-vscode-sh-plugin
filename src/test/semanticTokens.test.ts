@@ -32,6 +32,7 @@ tokenTypes[TokenType.typeParameter] = 'typeParameter';
 tokenTypes[TokenType.type] = 'type';
 tokenTypes[TokenType.parameter] = 'parameter';
 tokenTypes[TokenType.variable] = 'variable';
+tokenTypes[TokenType.enumMember] = 'enumMember';
 tokenTypes[TokenType.property] = 'property';
 tokenTypes[TokenType.function] = 'function';
 tokenTypes[TokenType.member] = 'member';
@@ -182,6 +183,85 @@ suite('HTML Semantic Tokens', () => {
             t(2, 15, 1, 'variable.declaration.readonly'), t(2, 20, 2, 'variable'), t(2, 26, 1, 'variable'), t(2, 30, 1, 'variable.readonly'),
             t(3, 11, 1, 'variable.declaration'),
             t(4, 10, 2, 'variable')
+        ]);
+    });
+
+    test('Functions', () => {
+        const input = [
+			/*0*/'function foo(p1) {',
+			/*1*/'  return foo(Math.abs(p1))',
+			/*2*/'}',
+			/*3*/'`/${window.location}`.split("/").forEach(s => foo(s));',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 9, 3, 'function.declaration'), t(0, 13, 2, 'parameter.declaration'),
+            t(1, 9, 3, 'function'), t(1, 13, 4, 'interface'), t(1, 18, 3, 'member'), t(1, 22, 2, 'parameter'),
+            t(3, 4, 6, 'variable'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member'), t(3, 33, 7, 'member'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
+        ]);
+    });
+
+    test('Members', () => {
+        const input = [
+			/*0*/'class A {',
+			/*1*/'  static x = 9;',
+			/*2*/'  f = 9;',
+			/*3*/'  async m() { return A.x + await this.m(); };',
+			/*4*/'  get s() { return this.f; ',
+			/*5*/'  static t() { return new A().f; };',
+			/*6*/'  constructor() {}',
+			/*7*/'}',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 6, 1, 'class.declaration'), t(1, 9, 1, 'property.declaration.static'),
+            t(2, 2, 1, 'property.declaration'),
+            t(3, 8, 1, 'member.declaration.async'), t(3, 21, 1, 'class'), t(3, 23, 1, 'property.static'), t(3, 38, 1, 'member.async'),
+            t(4, 6, 1, 'property.declaration'), t(4, 24, 1, 'property'),
+            t(5, 9, 1, 'member.declaration.static'), t(5, 26, 1, 'class'), t(5, 30, 1, 'property')
+        ]);
+    });
+
+    test('Interfaces', () => {
+        const input = [
+			/*0*/'interface Position { x: number, y: number };',
+			/*1*/'const p = { x: 1, y: 2 } as Position;',
+			/*2*/'const foo = (o: Position) => o.x + o.y;',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 10, 8, 'interface.declaration'), t(0, 21, 1, 'property.declaration'), t(0, 32, 1, 'property.declaration'), 
+            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 28, 8, 'interface'), 
+            t(2, 6, 3, 'variable.declaration.readonly'), t(2, 13, 1, 'parameter.declaration'), t(2, 16, 8, 'interface'), t(2, 29, 1, 'parameter'), t(2, 31, 1, 'property'), t(2, 35, 1, 'parameter'), t(2, 37, 1, 'property')
+        ]);
+    });
+
+    test('Readonly', () => {
+        const input = [
+			/*0*/'const f = 9;',
+			/*1*/'class A { static readonly t = 9; static url: URL; }',
+			/*2*/'const enum E { A = 9, B = A + 1 }',
+			/*3*/'console.log(f + A.t + A.url.origin + E.A);',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 6, 1, 'variable.declaration.readonly'),
+            t(1, 6, 1, 'class.declaration'), t(1, 26, 1, 'property.declaration.static.readonly'), t(1, 40, 3, 'property.declaration.static'), t(1, 45, 3, 'interface'),
+            t(2, 11, 1, 'enum.declaration'), t(2, 15, 1, 'enumMember.declaration.readonly'), t(2, 22, 1, 'enumMember.declaration.readonly'), t(2, 26, 1, 'enumMember.readonly'),
+            t(3, 0, 7, 'variable'), t(3, 8, 3, 'member'), t(3, 12, 1, 'variable.readonly'), t(3, 16, 1, 'class'), t(3, 18, 1, 'property.static.readonly'), t(3, 22, 1, 'class'), t(3, 24, 3, 'property.static'), t(3, 28, 6, 'property.readonly'), t(3, 37, 1, 'enum'), t(3, 39, 1, 'enumMember.readonly')
+        ]);
+    });
+
+
+    test('Type aliases and type parameters', () => {
+        const input = [
+			/*0*/'type MyMap = Map<string, number>;',
+			/*1*/'function f<T extends MyMap>(t: T | number) : T { ',
+			/*2*/'  return <T> <unknown> new Map<string, MyMap>();',
+			/*3*/'}',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 5, 5, 'type.declaration'), t(0, 13, 3, 'interface'),
+            t(1, 9, 1, 'function.declaration'), t(1, 11, 1, 'typeParameter.declaration'), t(1, 21, 5, 'type'), t(1, 28, 1, 'parameter.declaration'), t(1, 31, 1, 'typeParameter'), t(1, 45, 1, 'typeParameter'),
+            t(2, 10, 1, 'typeParameter'), t(2, 27, 3, 'interface'), t(2, 39, 5, 'type')
+
+
         ]);
     });
 
