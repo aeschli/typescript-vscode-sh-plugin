@@ -1,6 +1,6 @@
 {
   "name": "typescript-vscode-sh-plugin",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "TypeScript plugin that provides richer semantic highlighing",
   "main": "lib/index.js",
   "scripts": {
