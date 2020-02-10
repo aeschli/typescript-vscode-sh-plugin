@@ -77,8 +77,6 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 				}
 
 				if (ts.isIdentifier(node) && !inJSXElement) {
-
-
 					let symbol = typeChecker.getSymbolAtLocation(node);
 					if (symbol) {
 						if (symbol.flags & ts.SymbolFlags.Alias) {
@@ -95,11 +93,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							}
 							const decl = symbol.valueDeclaration;
 
-							if (typeIdx === TokenType.variable) {
+							if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
 								const type = typeChecker.getTypeAtLocation(node);
 								if (type && type.getCallSignatures().length) {
 									typeIdx = TokenType.function;
-
 								}
 							}
 
