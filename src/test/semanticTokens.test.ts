@@ -250,6 +250,19 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
+    test('Enums', () => {
+        const input = [
+			/*0*/'export enum TextDocumentSaveReason {',
+			/*1*/'  Manual = 1',
+			/*2*/'}',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 12, 22, 'enum.declaration'),
+            t(1, 2, 6, 'enumMember.declaration.readonly')
+        ]);
+    });
+
+
     test('Readonly', () => {
         const input = [
 			/*0*/'const f = 9;',
