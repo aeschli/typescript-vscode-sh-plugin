@@ -11,7 +11,7 @@ export const enum TokenType {
 }
 
 export const enum TokenModifier {
-	declaration, static, async, readonly, _
+	declaration, static, async, readonly, local, _
 }
 
 export const enum TokenEncodingConsts {
@@ -20,7 +20,7 @@ export const enum TokenEncodingConsts {
 }
 
 export declare const enum VersionRequirement {
-    major = 3,
-    minor = 7
+	major = 3,
+	minor = 7
 }
 

@@ -59,72 +59,79 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 	function collectTokens(jsLanguageService: ts.LanguageService, fileName: string, span: ts.TextSpan, collector: (node: ts.Node, tokenType: number, tokenModifier: number) => void) {
 		const program = jsLanguageService.getProgram();
-		if (program) {
-			const typeChecker = program.getTypeChecker();
+		if (!program) {
+			return;
+		}
+		const typeChecker = program.getTypeChecker();
 
-			let inJSXElement = false;
+		const sourceFile = program.getSourceFile(fileName);
+		if (!sourceFile) {
+			return;
+		}
 
-			function visit(node: ts.Node) {
-				if (!node || !ts.textSpanIntersectsWith(span, node.pos, node.getFullWidth()) || node.getFullWidth() === 0) {
-					return;
-				}
-				const prevInJSXElement = inJSXElement;
-				if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
-					inJSXElement = true;
-				}
-				if (ts.isJsxExpression(node)) {
-					inJSXElement = false;
-				}
+		let inJSXElement = false;
 
-				if (ts.isIdentifier(node) && !inJSXElement) {
-					let symbol = typeChecker.getSymbolAtLocation(node);
-					if (symbol) {
-						if (symbol.flags & ts.SymbolFlags.Alias) {
-							symbol = typeChecker.getAliasedSymbol(symbol);
+		function visit(node: ts.Node) {
+			if (!node || !ts.textSpanIntersectsWith(span, node.pos, node.getFullWidth()) || node.getFullWidth() === 0) {
+				return;
+			}
+			const prevInJSXElement = inJSXElement;
+			if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node)) {
+				inJSXElement = true;
+			}
+			if (ts.isJsxExpression(node)) {
+				inJSXElement = false;
+			}
+
+			if (ts.isIdentifier(node) && !inJSXElement) {
+				let symbol = typeChecker.getSymbolAtLocation(node);
+				if (symbol) {
+					if (symbol.flags & ts.SymbolFlags.Alias) {
+						symbol = typeChecker.getAliasedSymbol(symbol);
+					}
+					let typeIdx = classifySymbol(symbol);
+					if (typeIdx !== undefined) {
+						let modifierSet = 0;
+						if (node.parent) {
+							const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
+							if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
+								modifierSet = 1 << TokenModifier.declaration;
+							}
 						}
-						let typeIdx = classifySymbol(symbol);
-						if (typeIdx !== undefined) {
-							let modifierSet = 0;
-							if (node.parent) {
-								const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
-								if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
-									modifierSet = 1 << TokenModifier.declaration;
-								}
-							}
-							const decl = symbol.valueDeclaration;
+						const decl = symbol.valueDeclaration;
 
-							if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
-								const type = typeChecker.getTypeAtLocation(node);
-								if (type && type.getCallSignatures().length) {
-									typeIdx = TokenType.function;
-								}
+						if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
+							const type = typeChecker.getTypeAtLocation(node);
+							if (type && type.getCallSignatures().length) {
+								typeIdx = TokenType.function;
 							}
-
-							const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
-							const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
-							if (modifiers & ts.ModifierFlags.Static) {
-								modifierSet |= 1 << TokenModifier.static;
-							}
-							if (modifiers & ts.ModifierFlags.Async) {
-								modifierSet |= 1 << TokenModifier.async;
-							}
-							if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
-								modifierSet |= 1 << TokenModifier.readonly;
-							}
-							collector(node, typeIdx, modifierSet);
 						}
+
+						const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
+						const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
+						if (modifiers & ts.ModifierFlags.Static) {
+							modifierSet |= 1 << TokenModifier.static;
+						}
+						if (modifiers & ts.ModifierFlags.Async) {
+							modifierSet |= 1 << TokenModifier.async;
+						}
+						if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
+							modifierSet |= 1 << TokenModifier.readonly;
+						}
+						if ((typeIdx === TokenType.variable || typeIdx === TokenType.function) && decl && isLocalDeclaration(decl, sourceFile!)) {
+							modifierSet |= 1 << TokenModifier.local;
+						}
+						collector(node, typeIdx, modifierSet);
 					}
 				}
-
-				ts.forEachChild(node, visit);
-
-				inJSXElement = prevInJSXElement;
 			}
-			const sourceFile = program.getSourceFile(fileName);
-			if (sourceFile) {
-				visit(sourceFile);
-			}
+			ts.forEachChild(node, visit);
+
+			inJSXElement = prevInJSXElement;
 		}
+		visit(sourceFile);
+
+
 	}
 
 	function classifySymbol(symbol: ts.Symbol) {
@@ -144,6 +151,15 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		}
 		const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
 		return decl && tokenFromDeclarationMapping[decl.kind];
+	}
+
+	function isLocalDeclaration(decl: ts.Declaration, sourceFile: ts.SourceFile) {
+		if (ts.isVariableDeclaration(decl)) {
+			return (!ts.isSourceFile(decl.parent.parent.parent) || ts.isCatchClause(decl.parent)) && decl.getSourceFile() === sourceFile;
+		} else if (ts.isFunctionDeclaration(decl)) {
+			return !ts.isSourceFile(decl.parent) && decl.getSourceFile() === sourceFile;
+		}
+		return false;
 	}
 
 	const tokenFromDeclarationMapping: { [name: string]: TokenType } = {

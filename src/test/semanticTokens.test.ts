@@ -42,6 +42,8 @@ tokenModifiers[TokenModifier.async] = 'async';
 tokenModifiers[TokenModifier.declaration] = 'declaration';
 tokenModifiers[TokenModifier.readonly] = 'readonly';
 tokenModifiers[TokenModifier.static] = 'static';
+tokenModifiers[TokenModifier.local] = 'local';
+
 
 function getTokenTypeFromClassification(tsClassification: number): number | undefined {
     if (tsClassification > TokenEncodingConsts.modifierMask) {
@@ -180,8 +182,8 @@ suite('HTML Semantic Tokens', () => {
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 6, 1, 'variable.declaration'), t(0, 13, 2, 'variable.declaration'), t(0, 19, 1, 'variable'),
-            t(2, 15, 1, 'variable.declaration.readonly'), t(2, 20, 2, 'variable'), t(2, 26, 1, 'variable'), t(2, 30, 1, 'variable.readonly'),
-            t(3, 11, 1, 'variable.declaration'),
+            t(2, 15, 1, 'variable.declaration.readonly.local'), t(2, 20, 2, 'variable'), t(2, 26, 1, 'variable'), t(2, 30, 1, 'variable.readonly.local'),
+            t(3, 11, 1, 'variable.declaration.local'),
             t(4, 10, 2, 'variable')
         ]);
     });
@@ -279,6 +281,20 @@ suite('HTML Semantic Tokens', () => {
     });
 
 
+    test('Local', () => {
+        const input = [
+			/*0*/'const f = 9;',
+			/*1*/'if (f > 0) { let x = 9;',
+            /*2*/'  function foo(p: number) { var y = x; }',
+            /*3*/'}'
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 6, 1, 'variable.declaration.readonly'),
+            t(1, 4, 1, 'variable.readonly'), t(1, 17, 1, 'variable.declaration.local'),
+            t(2, 11, 3, 'function.declaration.local'), t(2, 15, 1, 'parameter.declaration'), t(2, 32, 1, 'variable.declaration.local'), t(2, 36, 1, 'variable.local')
+        ]);
+    });
+
     test('Type aliases and type parameters', () => {
         const input = [
 			/*0*/'type MyMap = Map<string, number>;',
@@ -290,8 +306,6 @@ suite('HTML Semantic Tokens', () => {
             t(0, 5, 5, 'type.declaration'), t(0, 13, 3, 'interface'),
             t(1, 9, 1, 'function.declaration'), t(1, 11, 1, 'typeParameter.declaration'), t(1, 21, 5, 'type'), t(1, 28, 1, 'parameter.declaration'), t(1, 31, 1, 'typeParameter'), t(1, 45, 1, 'typeParameter'),
             t(2, 10, 1, 'typeParameter'), t(2, 27, 3, 'interface'), t(2, 39, 5, 'type')
-
-
         ]);
     });
 
