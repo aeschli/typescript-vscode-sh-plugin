@@ -89,7 +89,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 					if (symbol.flags & ts.SymbolFlags.Alias) {
 						symbol = typeChecker.getAliasedSymbol(symbol);
 					}
-					let typeIdx = classifySymbol(symbol);
+					let typeIdx = classifySymbol(symbol, getMeaningFromLocation(node));
 					if (typeIdx !== undefined) {
 						let modifierSet = 0;
 						if (node.parent) {
@@ -134,7 +134,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 	}
 
-	function classifySymbol(symbol: ts.Symbol) {
+	function classifySymbol(symbol: ts.Symbol, meaning: SemanticMeaning) {
 		const flags = symbol.getFlags();
 		if (flags & ts.SymbolFlags.Class) {
 			return TokenType.class;
@@ -142,12 +142,12 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			return TokenType.enum;
 		} else if (flags & ts.SymbolFlags.TypeAlias) {
 			return TokenType.type;
-		} else if (flags & ts.SymbolFlags.Type) {
-			if (flags & ts.SymbolFlags.Interface) {
+		} else if (flags & ts.SymbolFlags.Interface) {
+			if (meaning & SemanticMeaning.Type) {
 				return TokenType.interface;
-			} if (flags & ts.SymbolFlags.TypeParameter) {
-				return TokenType.typeParameter;
 			}
+		} else if (flags & ts.SymbolFlags.TypeParameter) {
+			return TokenType.typeParameter;
 		}
 		const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
 		return decl && tokenFromDeclarationMapping[decl.kind];
@@ -160,6 +160,37 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			return !ts.isSourceFile(decl.parent) && decl.getSourceFile() === sourceFile;
 		}
 		return false;
+	}
+
+	function isTypeInNewExpression(node: ts.Node) {
+		while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
+			node = node.parent
+		}
+		return ts.isNewExpression(node.parent) && node.parent.expression === node;
+	}
+
+	function isRightSideOfQualifiedNameOrPropertyAccess(node: ts.Node) {
+		return (ts.isQualifiedName(node.parent) && node.parent.right === node) || (ts.isPropertyAccessExpression(node.parent) && node.parent.name === node);
+	}
+
+
+	const enum SemanticMeaning {
+		None = 0x0,
+		Value = 0x1,
+		Type = 0x2,
+		Namespace = 0x4,
+		All = Value | Type | Namespace
+	}
+
+	function getMeaningFromLocation(node: ts.Node): SemanticMeaning {
+		if (isTypeInNewExpression(node)) {
+			return SemanticMeaning.Type;
+		}
+		const f = (<any>ts).getMeaningFromLocation;
+		if (typeof f === 'function') {
+			return f(node);
+		}
+		return SemanticMeaning.All;
 	}
 
 	const tokenFromDeclarationMapping: { [name: string]: TokenType } = {

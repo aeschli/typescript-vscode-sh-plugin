@@ -199,7 +199,7 @@ suite('HTML Semantic Tokens', () => {
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 9, 3, 'function.declaration'), t(0, 13, 2, 'parameter.declaration'),
-            t(1, 9, 3, 'function'), t(1, 13, 4, 'interface'), t(1, 18, 3, 'member'), t(1, 22, 2, 'parameter'),
+            t(1, 9, 3, 'function'), t(1, 13, 4, 'variable'), t(1, 18, 3, 'member'), t(1, 22, 2, 'parameter'),
             t(3, 4, 6, 'variable'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member'), t(3, 33, 7, 'member'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter'),
             t(4, 6, 5, 'function.declaration.readonly'), t(4, 15, 1, 'parameter.declaration'), t(4, 29, 1, 'parameter'), t(4, 31, 6, 'property.readonly'),
             t(5, 6, 5, 'function.declaration.readonly'), t(5, 14, 5, 'function.readonly')
@@ -306,6 +306,23 @@ suite('HTML Semantic Tokens', () => {
             t(0, 5, 5, 'type.declaration'), t(0, 13, 3, 'interface'),
             t(1, 9, 1, 'function.declaration'), t(1, 11, 1, 'typeParameter.declaration'), t(1, 21, 5, 'type'), t(1, 28, 1, 'parameter.declaration'), t(1, 31, 1, 'typeParameter'), t(1, 45, 1, 'typeParameter'),
             t(2, 10, 1, 'typeParameter'), t(2, 27, 3, 'interface'), t(2, 39, 5, 'type')
+        ]);
+    });
+
+    test('New Expressions', () => {
+        const input = [
+            /*0*/'new Map<string, string>();',
+            /*1*/'class A {} new A();',
+            /*2*/'class B { constructor(i: number){} } new B(1);',
+            /*3*/'new Date()',
+            /*4*/'new window.Date()'
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 4, 3, 'interface'),
+            t(1, 6, 1, 'class.declaration'), t(1, 15, 1, 'class'),
+            t(2, 6, 1, 'class.declaration'), t(2, 22, 1, 'parameter.declaration'), t(2, 41, 1, 'class'),
+            t(3, 4, 4, 'interface'),
+            t(4, 4, 6, 'variable'), t(4, 11, 4, 'interface')
         ]);
     });
 
