@@ -194,15 +194,11 @@ suite('HTML Semantic Tokens', () => {
 			/*1*/'  return foo(Math.abs(p1))',
 			/*2*/'}',
             /*3*/'`/${window.location}`.split("/").forEach(s => foo(s));',
-            /*4*/'const match = (s: string) => s.length;',
-            /*4*/'const other = match',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 9, 3, 'function.declaration'), t(0, 13, 2, 'parameter.declaration'),
             t(1, 9, 3, 'function'), t(1, 13, 4, 'variable'), t(1, 18, 3, 'member'), t(1, 22, 2, 'parameter'),
-            t(3, 4, 6, 'variable'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member'), t(3, 33, 7, 'member'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter'),
-            t(4, 6, 5, 'function.declaration.readonly'), t(4, 15, 1, 'parameter.declaration'), t(4, 29, 1, 'parameter'), t(4, 31, 6, 'property.readonly'),
-            t(5, 6, 5, 'function.declaration.readonly'), t(5, 14, 5, 'function.readonly')
+            t(3, 4, 6, 'variable'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member'), t(3, 33, 7, 'member'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
         ]);
     });
 
@@ -214,15 +210,15 @@ suite('HTML Semantic Tokens', () => {
 			/*3*/'  async m() { return A.x + await this.m(); };',
 			/*4*/'  get s() { return this.f; ',
 			/*5*/'  static t() { return new A().f; };',
-			/*6*/'  constructor() {}',
-			/*7*/'}',
+            /*6*/'  constructor() {}',
+			/*8*/'}',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 6, 1, 'class.declaration'), t(1, 9, 1, 'property.declaration.static'),
             t(2, 2, 1, 'property.declaration'),
             t(3, 8, 1, 'member.declaration.async'), t(3, 21, 1, 'class'), t(3, 23, 1, 'property.static'), t(3, 38, 1, 'member.async'),
             t(4, 6, 1, 'property.declaration'), t(4, 24, 1, 'property'),
-            t(5, 9, 1, 'member.declaration.static'), t(5, 26, 1, 'class'), t(5, 30, 1, 'property')
+            t(5, 9, 1, 'member.declaration.static'), t(5, 26, 1, 'class'), t(5, 30, 1, 'property'),
         ]);
     });
 
@@ -235,7 +231,24 @@ suite('HTML Semantic Tokens', () => {
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 4, 1, 'variable.declaration'), t(0, 11, 1, 'variable.declaration'),
             t(1, 6, 2, 'variable.declaration.readonly'), t(1, 13, 1, 'property.declaration'),
-            t(2, 4, 2, 'variable.declaration')
+            t(2, 4, 2, 'variable.declaration'), t(2, 11, 1, 'property.declaration')
+        ]);
+    });
+
+    test('Callable variables & members', () => {
+        const input = [
+            /*0*/'class A { onEvent: () => void; }',
+            /*1*/'const x = new A().onEvent;',
+            /*2*/'const match = (s: any) => x();',
+            /*3*/'const other = match;',
+            /*4*/'match({ other });',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 6, 1, 'class.declaration'), t(0, 10, 7, 'member.declaration'),
+            t(1, 6, 1, 'function.declaration.readonly'), t(1, 14, 1, 'class'), t(1, 18, 7, 'member'),
+            t(2, 6, 5, 'function.declaration.readonly'), t(2, 15, 1, 'parameter.declaration'), t(2, 26, 1, 'function.readonly'),
+            t(3, 6, 5, 'function.declaration.readonly'), t(3, 14, 5, 'function.readonly'),
+            t(4, 0, 5, 'function.readonly'), t(4, 8, 5, 'member.declaration')
         ]);
     });
 

@@ -103,7 +103,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 						if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
 							const type = typeChecker.getTypeAtLocation(node);
 							if (type && type.getCallSignatures().length) {
-								typeIdx = TokenType.function;
+								typeIdx = typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
 							}
 						}
 
@@ -209,7 +209,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		[ts.SyntaxKind.InterfaceDeclaration]: TokenType.interface,
 		[ts.SyntaxKind.TypeAliasDeclaration]: TokenType.type,
 		[ts.SyntaxKind.TypeParameter]: TokenType.typeParameter,
-		[ts.SyntaxKind.PropertyAssignment]: TokenType.property
+		[ts.SyntaxKind.PropertyAssignment]: TokenType.property,
+		[ts.SyntaxKind.ShorthandPropertyAssignment]: TokenType.property
 	};
 
 	return {
