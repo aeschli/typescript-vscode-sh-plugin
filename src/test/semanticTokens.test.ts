@@ -235,20 +235,28 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
-    test('Callable variables & members', () => {
+    test('Callable Variables & Members', () => {
         const input = [
             /*0*/'class A { onEvent: () => void; }',
             /*1*/'const x = new A().onEvent;',
             /*2*/'const match = (s: any) => x();',
             /*3*/'const other = match;',
             /*4*/'match({ other });',
+            /*5*/'interface B = { (): string; }; var b: B',
+            /*6*/'var s: String;',
+            /*7*/'var t: { (): string; foo: string};',
+            /*8*/'Object.create(null);',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 6, 1, 'class.declaration'), t(0, 10, 7, 'member.declaration'),
             t(1, 6, 1, 'function.declaration.readonly'), t(1, 14, 1, 'class'), t(1, 18, 7, 'member'),
             t(2, 6, 5, 'function.declaration.readonly'), t(2, 15, 1, 'parameter.declaration'), t(2, 26, 1, 'function.readonly'),
             t(3, 6, 5, 'function.declaration.readonly'), t(3, 14, 5, 'function.readonly'),
-            t(4, 0, 5, 'function.readonly'), t(4, 8, 5, 'member.declaration')
+            t(4, 0, 5, 'function.readonly'), t(4, 8, 5, 'member.declaration'),
+            t(5, 10, 1, 'interface.declaration'), t(5, 35, 1, 'variable.declaration'), t(5, 38, 1, 'interface'),
+            t(6, 4, 1, 'variable.declaration'), t(6, 7, 6, 'interface'),
+            t(7, 4, 1, 'variable.declaration'), t(7, 21, 3, 'property.declaration'),
+            t(8, 0, 6, 'variable'), t(8, 7, 6, 'member')
         ]);
     });
 
@@ -308,7 +316,7 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
-    test('Type aliases and type parameters', () => {
+    test('Type Aliases and Type Parameters', () => {
         const input = [
 			/*0*/'type MyMap = Map<string, number>;',
 			/*1*/'function f<T extends MyMap>(t: T | number) : T { ',

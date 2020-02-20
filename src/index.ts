@@ -102,7 +102,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 						if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
 							const type = typeChecker.getTypeAtLocation(node);
-							if (type && type.getCallSignatures().length) {
+							if (type && type.getCallSignatures().length && type.getProperties().length === 0) {
 								typeIdx = typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
 							}
 						}
