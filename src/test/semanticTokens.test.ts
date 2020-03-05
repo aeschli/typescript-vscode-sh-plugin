@@ -235,7 +235,7 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
-    test('Callable Variables & Members', () => {
+    test('Callable Variables & Properties', () => {
         const input = [
             /*0*/'class A { onEvent: () => void; }',
             /*1*/'const x = new A().onEvent;',

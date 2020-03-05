@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // typescript-vscode-sh-plugin encodes type and modifiers in the classification:
-// TSClassification = (TokenType + 1) << 8 + TokenModifier
+// TSClassification = ((TokenType + 1) << typeOffset) + TokenModifier
 
 export const enum TokenType {
 	class, enum, interface, namespace, typeParameter, type, parameter, variable, enumMember, property, function, member, _
