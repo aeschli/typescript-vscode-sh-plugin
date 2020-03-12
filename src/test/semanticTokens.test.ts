@@ -385,8 +385,8 @@ suite('HTML Semantic Tokens', () => {
 
     test('Import', () => {
         const input = [
-            /*0*/'import { A, I, f, c } from "./other"',
-            /*1*/'A.f = 8 + f() + c;',
+            /*0*/'import { A, I, f, c as d } from "./other"',
+            /*1*/'A.f = 8 + f() + d;',
         ].join('\n');
         const other = [
             /*0*/'export class A { public static f = 9; }',
@@ -395,20 +395,20 @@ suite('HTML Semantic Tokens', () => {
             /*3*/'export const c = 9;',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input, 'other.ts': other }, [
-            t(0, 9, 1, 'class'), t(0, 12, 1, 'interface'), t(0, 15, 1, 'function'), t(0, 18, 1, 'variable.readonly'),
+            /*t(0, 9, 1, 'class'), t(0, 12, 1, 'interface'), t(0, 15, 1, 'function'), t(0, 18, 1, 'variable.readonly'),*/
             t(1, 0, 1, 'class'), t(1, 2, 1, 'property.static'), t(1, 10, 1, 'function'), t(1, 16, 1, 'variable.readonly')
         ]);
     });
 
     test('JSX', () => {
         const input = [
-            /*0*/'import React from "react";',
+            /*0*/'import * as React from "react";',
             /*1*/'function () {',
             /*2*/'  return (<div className="App">{React.version}</div>);',
             /*3*/'}',
         ].join('\n');
         assertTokens('main.tsx', { 'main.tsx': input }, [
-            t(0, 7, 5, 'namespace'),
+            /*t(0, 7, 5, 'namespace'),*/
             t(2, 32, 5, 'namespace'), t(2, 38, 7, 'variable.readonly')
         ]);
     });

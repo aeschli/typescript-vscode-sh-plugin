@@ -5,6 +5,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
+import { isImportClause, isImportSpecifier, isNamespaceImport } from 'typescript/lib/tsserverlibrary';
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
 	const ts = modules.typescript;
@@ -83,7 +84,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 				inJSXElement = false;
 			}
 
-			if (ts.isIdentifier(node) && !inJSXElement) {
+			if (ts.isIdentifier(node) && !inJSXElement && !inImportClause(node)) {
 				let symbol = typeChecker.getSymbolAtLocation(node);
 				if (symbol) {
 					if (symbol.flags & ts.SymbolFlags.Alias) {
@@ -174,12 +175,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return false;
 	}
 
-	// function isTypeInNewExpression(node: ts.Node) {
-	// 	while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
-	// 		node = node.parent
-	// 	}
-	// 	return ts.isNewExpression(node.parent) && node.parent.expression === node;
-	// }
+	function inImportClause(node: ts.Node) {
+		const parent = node.parent;
+		return parent && (isImportClause(parent) || isImportSpecifier(parent) || isNamespaceImport(parent));
+	}
 
 	function isExpressionInCallExpression(node: ts.Node) {
 		while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
@@ -191,10 +190,6 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 	function isRightSideOfQualifiedNameOrPropertyAccess(node: ts.Node) {
 		return (ts.isQualifiedName(node.parent) && node.parent.right === node) || (ts.isPropertyAccessExpression(node.parent) && node.parent.name === node);
 	}
-
-	// function isLeftSideOfQualifiedNameOrPropertyAccess(node: ts.Node) {
-	// 	return (ts.isQualifiedName(node.parent) && node.parent.left === node) || (ts.isPropertyAccessExpression(node.parent) && node.parent.expression === node);
-	// }
 
 	const enum SemanticMeaning {
 		None = 0x0,
