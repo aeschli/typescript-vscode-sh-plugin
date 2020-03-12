@@ -233,6 +233,24 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
+    test('Class Properties', () => {
+        const input = [
+            /*0*/'class A { ',
+            /*1*/'  private y: number;',
+            /*2*/'  constructor(public x : number, _y : number) { this.y = _y; }',
+            /*3*/'  get z() : number { return this.x + this.y; }',
+            /*4*/'  set a(v: number) { }',
+            /*5*/'}',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 6, 1, 'class.declaration'),
+            t(1, 10, 1, 'property.declaration'),
+            t(2, 21, 1, 'parameter.declaration'), t(2, 33, 2, 'parameter.declaration'), t(2, 53, 1, 'property'), t(2, 57, 2, 'parameter'),
+            t(3, 6, 1, 'property.declaration'), t(3, 33, 1, 'property'), t(3, 42, 1, 'property'),
+            t(4, 8, 1, 'parameter.declaration')
+        ]);
+    });
+
     test('Object Properties', () => {
         const input = [
 			/*0*/'let x = 1, y = 1;',

@@ -99,6 +99,11 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							}
 						}
 
+						// property declaration in constructor
+						if (typeIdx === TokenType.parameter && isRightSideOfQualifiedNameOrPropertyAccess(node)) {
+							typeIdx = TokenType.property;
+						}
+
 						typeIdx = reclassifyByType(typeChecker, node, typeIdx);
 
 						const decl = symbol.valueDeclaration;
