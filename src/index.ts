@@ -99,16 +99,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							}
 						}
 
+						typeIdx = reclassifyByType(typeChecker, node, typeIdx);
 
-						if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
-							const type = typeChecker.getTypeAtLocation(node);
-
-							if (type && type.getCallSignatures().length) {
-								if ((type.getProperties().length === 0) || isExpressionInCallExpression(node)) {
-									typeIdx = typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
-								}
-							}
-						}
 						const decl = symbol.valueDeclaration;
 						const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
 						const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
@@ -157,6 +149,22 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
 
+	function reclassifyByType(typeChecker: ts.TypeChecker, node: ts.Node, typeIdx: TokenType): TokenType {
+		// type based classifications
+		if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
+			const type = typeChecker.getTypeAtLocation(node);
+			if (type) {
+				if (type.getConstructSignatures().length) {
+					return TokenType.class;
+				}
+				if (type.getCallSignatures().length && ((type.getProperties().length === 0) || isExpressionInCallExpression(node))) {
+					return typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
+				}
+			}
+		}
+		return typeIdx;
+	}
+
 	function isLocalDeclaration(decl: ts.Declaration, sourceFile: ts.SourceFile) {
 		if (ts.isVariableDeclaration(decl)) {
 			return (!ts.isSourceFile(decl.parent.parent.parent) || ts.isCatchClause(decl.parent)) && decl.getSourceFile() === sourceFile;
@@ -166,12 +174,12 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return false;
 	}
 
-	function isTypeInNewExpression(node: ts.Node) {
-		while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
-			node = node.parent
-		}
-		return ts.isNewExpression(node.parent) && node.parent.expression === node;
-	}
+	// function isTypeInNewExpression(node: ts.Node) {
+	// 	while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
+	// 		node = node.parent
+	// 	}
+	// 	return ts.isNewExpression(node.parent) && node.parent.expression === node;
+	// }
 
 	function isExpressionInCallExpression(node: ts.Node) {
 		while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
@@ -184,6 +192,9 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return (ts.isQualifiedName(node.parent) && node.parent.right === node) || (ts.isPropertyAccessExpression(node.parent) && node.parent.name === node);
 	}
 
+	// function isLeftSideOfQualifiedNameOrPropertyAccess(node: ts.Node) {
+	// 	return (ts.isQualifiedName(node.parent) && node.parent.left === node) || (ts.isPropertyAccessExpression(node.parent) && node.parent.expression === node);
+	// }
 
 	const enum SemanticMeaning {
 		None = 0x0,
@@ -194,9 +205,6 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 	}
 
 	function getMeaningFromLocation(node: ts.Node): SemanticMeaning {
-		if (isTypeInNewExpression(node)) {
-			return SemanticMeaning.Type;
-		}
 		const f = (<any>ts).getMeaningFromLocation;
 		if (typeof f === 'function') {
 			return f(node);

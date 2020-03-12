@@ -256,7 +256,6 @@ suite('HTML Semantic Tokens', () => {
             /*5*/'interface B = { (): string; }; var b: B',
             /*6*/'var s: String;',
             /*7*/'var t: { (): string; foo: string};',
-            /*8*/'Object.create(null);'
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 6, 1, 'class.declaration'), t(0, 10, 7, 'member.declaration'),
@@ -267,7 +266,6 @@ suite('HTML Semantic Tokens', () => {
             t(5, 10, 1, 'interface.declaration'), t(5, 35, 1, 'variable.declaration'), t(5, 38, 1, 'interface'),
             t(6, 4, 1, 'variable.declaration'), t(6, 7, 6, 'interface'),
             t(7, 4, 1, 'variable.declaration'), t(7, 21, 3, 'property.declaration'),
-            t(8, 0, 6, 'variable'), t(8, 7, 6, 'member')
         ]);
     });
 
@@ -282,6 +280,19 @@ suite('HTML Semantic Tokens', () => {
             t(1, 4, 2, 'variable.declaration'), t(1, 9, 7, 'function'),
             t(2, 0, 7, 'variable'), t(2, 8, 7, 'member'),
             t(3, 0, 7, 'variable'), t(3, 8, 7, 'property'), t(3, 16, 5, 'member')
+        ]);
+    });
+
+    test('Constructor Types', () => {
+        const input = [
+            /*0*/'Object.create(null);',
+            /*1*/`const x = Promise.resolve(Number.MAX_VALUE);`,
+            /*2*/`if (x instanceof Promise) {}`
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 0, 6, 'class'), t(0, 7, 6, 'member'),
+            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 10, 7, 'class'), t(1, 18, 7, 'member'), t(1, 26, 6, 'class'), t(1, 33, 9, 'property.readonly'),
+            t(2, 4, 1, 'variable.readonly'), t(2, 17, 7, 'class')
         ]);
     });
 
@@ -351,7 +362,7 @@ suite('HTML Semantic Tokens', () => {
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 5, 5, 'type.declaration'), t(0, 13, 3, 'interface'),
             t(1, 9, 1, 'function.declaration'), t(1, 11, 1, 'typeParameter.declaration'), t(1, 21, 5, 'type'), t(1, 28, 1, 'parameter.declaration'), t(1, 31, 1, 'typeParameter'), t(1, 45, 1, 'typeParameter'),
-            t(2, 10, 1, 'typeParameter'), t(2, 27, 3, 'interface'), t(2, 39, 5, 'type')
+            t(2, 10, 1, 'typeParameter'), t(2, 27, 3, 'class'), t(2, 39, 5, 'type')
         ]);
     });
 
@@ -364,11 +375,11 @@ suite('HTML Semantic Tokens', () => {
             /*4*/'new window.Date()'
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
-            t(0, 4, 3, 'interface'),
+            t(0, 4, 3, 'class'),
             t(1, 6, 1, 'class.declaration'), t(1, 15, 1, 'class'),
             t(2, 6, 1, 'class.declaration'), t(2, 22, 1, 'parameter.declaration'), t(2, 41, 1, 'class'),
-            t(3, 4, 4, 'interface'),
-            t(4, 4, 6, 'variable'), t(4, 11, 4, 'interface')
+            t(3, 4, 4, 'class'),
+            t(4, 4, 6, 'variable'), t(4, 11, 4, 'class')
         ]);
     });
 
