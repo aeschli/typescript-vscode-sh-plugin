@@ -98,15 +98,18 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 								modifierSet = 1 << TokenModifier.declaration;
 							}
 						}
-						const decl = symbol.valueDeclaration;
+
 
 						if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
 							const type = typeChecker.getTypeAtLocation(node);
-							if (type && type.getCallSignatures().length && type.getProperties().length === 0) {
-								typeIdx = typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
+
+							if (type && type.getCallSignatures().length) {
+								if ((type.getProperties().length === 0) || isExpressionInCallExpression(node)) {
+									typeIdx = typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
+								}
 							}
 						}
-
+						const decl = symbol.valueDeclaration;
 						const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
 						const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
 						if (modifiers & ts.ModifierFlags.Static) {
@@ -122,6 +125,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							modifierSet |= 1 << TokenModifier.local;
 						}
 						collector(node, typeIdx, modifierSet);
+
 					}
 				}
 			}
@@ -134,7 +138,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 	}
 
-	function classifySymbol(symbol: ts.Symbol, meaning: SemanticMeaning) {
+	function classifySymbol(symbol: ts.Symbol, meaning: SemanticMeaning): TokenType | undefined {
 		const flags = symbol.getFlags();
 		if (flags & ts.SymbolFlags.Class) {
 			return TokenType.class;
@@ -167,6 +171,13 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			node = node.parent
 		}
 		return ts.isNewExpression(node.parent) && node.parent.expression === node;
+	}
+
+	function isExpressionInCallExpression(node: ts.Node) {
+		while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
+			node = node.parent
+		}
+		return ts.isCallExpression(node.parent) && node.parent.expression === node;
 	}
 
 	function isRightSideOfQualifiedNameOrPropertyAccess(node: ts.Node) {

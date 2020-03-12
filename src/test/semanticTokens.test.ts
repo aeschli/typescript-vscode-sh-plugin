@@ -57,9 +57,8 @@ function getTokenModifierFromClassification(tsClassification: number) {
 }
 
 function assertTokens(mainFileName: string, files: { [name: string]: string } = {}, expected: ExpectedToken[], span?: ts.TextSpan): void {
-    const sourceRoot = '/root/sources/';
+    const sourceRoot = __dirname; // use the current directory as root for all test files to enable module lookup
     const mainFilePath = sourceRoot + mainFileName;
-    const reactPath = require.resolve('@types/react/index.d.ts');
 
     function findFilePath(moduleName: string) {
         for (let fileName in files) {
@@ -71,10 +70,16 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
     }
 
     let compilerOptions: ts.CompilerOptions = {
-        allowNonTsExtensions: true, allowJs: true, lib: ['lib.es6.d.ts'],
-        target: ts.ScriptTarget.Latest, moduleResolution: ts.ModuleResolutionKind.NodeJs,
-        jsx: ts.JsxEmit.React, allowSyntheticDefaultImports: true
+        allowNonTsExtensions: true,
+        allowJs: true,
+        lib: ['lib.es6.d.ts'],
+        target: ts.ScriptTarget.Latest,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
+        jsx: ts.JsxEmit.React,
+        allowSyntheticDefaultImports: true,
+        types: ["node"]
     };
+
     const host: ts.LanguageServiceHost = {
         getCompilationSettings: () => compilerOptions,
         getScriptFileNames: () => [...Object.keys(files).map(k => sourceRoot + k)],
@@ -102,7 +107,7 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
             };
         },
         getCurrentDirectory: () => __dirname,
-        // getDirectories: ts.sys.getDirectories,
+        getDirectories: ts.sys.getDirectories,
         // directoryExists: ts.sys.directoryExists,
         // fileExists: ts.sys.fileExists,
         // readFile: ts.sys.readFile,
@@ -116,10 +121,16 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
                         resolvedFileName = path.join(path.dirname(containingFile), moduleName + '.ts');
                     }
                     resolvedModules.push({ resolvedFileName });
-                } else if (moduleName === 'react') {
-                    resolvedModules.push({ resolvedFileName: reactPath })
                 } else {
-                    resolvedModules.push(undefined);
+                    let result = ts.resolveModuleName(moduleName, containingFile, compilerOptions, {
+                        fileExists: ts.sys.fileExists,
+                        readFile: ts.sys.readFile,
+                    });
+                    if (result.resolvedModule) {
+                        resolvedModules.push(result.resolvedModule);
+                    } else {
+                        resolvedModules.push(undefined);
+                    }
                 }
             }
             return resolvedModules;
@@ -245,7 +256,7 @@ suite('HTML Semantic Tokens', () => {
             /*5*/'interface B = { (): string; }; var b: B',
             /*6*/'var s: String;',
             /*7*/'var t: { (): string; foo: string};',
-            /*8*/'Object.create(null);',
+            /*8*/'Object.create(null);'
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 6, 1, 'class.declaration'), t(0, 10, 7, 'member.declaration'),
@@ -257,6 +268,20 @@ suite('HTML Semantic Tokens', () => {
             t(6, 4, 1, 'variable.declaration'), t(6, 7, 6, 'interface'),
             t(7, 4, 1, 'variable.declaration'), t(7, 21, 3, 'property.declaration'),
             t(8, 0, 6, 'variable'), t(8, 7, 6, 'member')
+        ]);
+    });
+
+    test('Callable Variables & Properties 2', () => {
+        const input = [
+            /*0*/'import "node";',
+            /*1*/'var fs = require("fs")',
+            /*2*/`require.resolve('react');`,
+            /*3*/`require.resolve.paths;`
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(1, 4, 2, 'variable.declaration'), t(1, 9, 7, 'function'),
+            t(2, 0, 7, 'variable'), t(2, 8, 7, 'member'),
+            t(3, 0, 7, 'variable'), t(3, 8, 7, 'property'), t(3, 16, 5, 'member')
         ]);
     });
 

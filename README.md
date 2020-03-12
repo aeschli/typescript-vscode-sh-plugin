@@ -46,8 +46,8 @@ Examples for each feature can be seen in the [test cases](https://github.com/aes
   - modifier `static` when defined as `static`
 - callable variables & properties
   - variables and properties that are function types are classified as function resp member
-  - featur request: [#89337](https://github.com/microsoft/vscode/issues/89337).
-  - does not apply to variables that are callable but also have properties. E.g. `Number`, `String` or `Object` [#89221](https://github.com/microsoft/vscode/issues/89221)
+  - feature request: [#89337](https://github.com/microsoft/vscode/issues/89337).
+  - if the type is callable but also has properties. E.g. `Number`, `String` or `Object` [#89221](https://github.com/microsoft/vscode/issues/89221), is stays a variable, unless used in a callExpression
   - still known bugs, e.g. for union types 
 - types, namespace
   - use the node location to find out when name resolves to multiple symbols (namespace, type or variable)
