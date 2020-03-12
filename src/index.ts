@@ -5,7 +5,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
-import { isImportClause, isImportSpecifier, isNamespaceImport } from 'typescript/lib/tsserverlibrary';
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
 	const ts = modules.typescript;
@@ -166,7 +165,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return typeIdx;
 	}
 
-	function isLocalDeclaration(decl: ts.Declaration, sourceFile: ts.SourceFile) {
+	function isLocalDeclaration(decl: ts.Declaration, sourceFile: ts.SourceFile): boolean {
 		if (ts.isVariableDeclaration(decl)) {
 			return (!ts.isSourceFile(decl.parent.parent.parent) || ts.isCatchClause(decl.parent)) && decl.getSourceFile() === sourceFile;
 		} else if (ts.isFunctionDeclaration(decl)) {
@@ -175,19 +174,19 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return false;
 	}
 
-	function inImportClause(node: ts.Node) {
+	function inImportClause(node: ts.Node): boolean {
 		const parent = node.parent;
-		return parent && (isImportClause(parent) || isImportSpecifier(parent) || isNamespaceImport(parent));
+		return parent && (ts.isImportClause(parent) || ts.isImportSpecifier(parent) || ts.isNamespaceImport(parent));
 	}
 
-	function isExpressionInCallExpression(node: ts.Node) {
+	function isExpressionInCallExpression(node: ts.Node): boolean {
 		while (isRightSideOfQualifiedNameOrPropertyAccess(node)) {
 			node = node.parent
 		}
 		return ts.isCallExpression(node.parent) && node.parent.expression === node;
 	}
 
-	function isRightSideOfQualifiedNameOrPropertyAccess(node: ts.Node) {
+	function isRightSideOfQualifiedNameOrPropertyAccess(node: ts.Node): boolean {
 		return (ts.isQualifiedName(node.parent) && node.parent.right === node) || (ts.isPropertyAccessExpression(node.parent) && node.parent.name === node);
 	}
 
