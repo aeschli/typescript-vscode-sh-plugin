@@ -159,10 +159,13 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
 			const type = typeChecker.getTypeAtLocation(node);
 			if (type) {
-				if (type.getConstructSignatures().length) {
+				const test = (condition: (type: ts.Type) => boolean) => {
+					return condition(type) || type.isUnion() && type.types.some(condition);
+				}
+				if (test(t => t.getConstructSignatures().length > 0)) {
 					return TokenType.class;
 				}
-				if (type.getCallSignatures().length && ((type.getProperties().length === 0) || isExpressionInCallExpression(node))) {
+				if (test(t => t.getCallSignatures().length > 0) && test(t => t.getProperties().length === 0) || isExpressionInCallExpression(node)) {
 					return typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
 				}
 			}
