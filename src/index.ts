@@ -156,17 +156,17 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 	function reclassifyByType(typeChecker: ts.TypeChecker, node: ts.Node, typeIdx: TokenType): TokenType {
 		// type based classifications
-		if (typeIdx === TokenType.variable || typeIdx === TokenType.property) {
+		if (typeIdx === TokenType.variable || typeIdx === TokenType.property || typeIdx === TokenType.parameter) {
 			const type = typeChecker.getTypeAtLocation(node);
 			if (type) {
 				const test = (condition: (type: ts.Type) => boolean) => {
 					return condition(type) || type.isUnion() && type.types.some(condition);
 				}
-				if (test(t => t.getConstructSignatures().length > 0)) {
+				if (typeIdx !== TokenType.parameter && test(t => t.getConstructSignatures().length > 0)) {
 					return TokenType.class;
 				}
-				if (test(t => t.getCallSignatures().length > 0) && test(t => t.getProperties().length === 0) || isExpressionInCallExpression(node)) {
-					return typeIdx === TokenType.variable ? TokenType.function : TokenType.member;
+				if (test(t => t.getCallSignatures().length > 0) && !test(t => t.getProperties().length > 0) || isExpressionInCallExpression(node)) {
+					return typeIdx === TokenType.property ? TokenType.member : TokenType.function;
 				}
 			}
 		}
