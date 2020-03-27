@@ -43,6 +43,7 @@ tokenModifiers[TokenModifier.declaration] = 'declaration';
 tokenModifiers[TokenModifier.readonly] = 'readonly';
 tokenModifiers[TokenModifier.static] = 'static';
 tokenModifiers[TokenModifier.local] = 'local';
+tokenModifiers[TokenModifier.defaultLibrary] = 'defaultLibrary';
 
 
 function getTokenTypeFromClassification(tsClassification: number): number | undefined {
@@ -208,8 +209,8 @@ suite('HTML Semantic Tokens', () => {
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 9, 3, 'function.declaration'), t(0, 13, 2, 'parameter.declaration'),
-            t(1, 9, 3, 'function'), t(1, 13, 4, 'variable'), t(1, 18, 3, 'member'), t(1, 22, 2, 'parameter'),
-            t(3, 4, 6, 'variable'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member'), t(3, 33, 7, 'member'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
+            t(1, 9, 3, 'function'), t(1, 13, 4, 'variable.defaultLibrary'), t(1, 18, 3, 'member.defaultLibrary'), t(1, 22, 2, 'parameter'),
+            t(3, 4, 6, 'variable.defaultLibrary'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member.defaultLibrary'), t(3, 33, 7, 'member.defaultLibrary'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
         ]);
     });
 
@@ -282,11 +283,11 @@ suite('HTML Semantic Tokens', () => {
             t(3, 6, 5, 'function.declaration.readonly'), t(3, 14, 5, 'function.readonly'),
             t(4, 0, 5, 'function.readonly'), t(4, 8, 5, 'member.declaration'),
             t(5, 10, 1, 'interface.declaration'), t(5, 35, 1, 'variable.declaration'), t(5, 38, 1, 'interface'),
-            t(6, 4, 1, 'variable.declaration'), t(6, 7, 6, 'interface'),
+            t(6, 4, 1, 'variable.declaration'), t(6, 7, 6, 'interface.defaultLibrary'),
             t(7, 4, 1, 'variable.declaration'), t(7, 21, 3, 'property.declaration'),
         ]);
     });
-
+    BigInt64Array
     test('Callable Variables & Properties 2', () => {
         const input = [
             /*0*/'import "node";',
@@ -308,9 +309,9 @@ suite('HTML Semantic Tokens', () => {
             /*2*/`if (x instanceof Promise) {}`
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
-            t(0, 0, 6, 'class'), t(0, 7, 6, 'member'),
-            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 10, 7, 'class'), t(1, 18, 7, 'member'), t(1, 26, 6, 'class'), t(1, 33, 9, 'property.readonly'),
-            t(2, 4, 1, 'variable.readonly'), t(2, 17, 7, 'class')
+            t(0, 0, 6, 'class.defaultLibrary'), t(0, 7, 6, 'member.defaultLibrary'),
+            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 10, 7, 'class.defaultLibrary'), t(1, 18, 7, 'member.defaultLibrary'), t(1, 26, 6, 'class.defaultLibrary'), t(1, 33, 9, 'property.readonly.defaultLibrary'),
+            t(2, 4, 1, 'variable.readonly'), t(2, 17, 7, 'class.defaultLibrary')
         ]);
     });
 
@@ -349,9 +350,9 @@ suite('HTML Semantic Tokens', () => {
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 6, 1, 'variable.declaration.readonly'),
-            t(1, 6, 1, 'class.declaration'), t(1, 26, 1, 'property.declaration.static.readonly'), t(1, 40, 3, 'property.declaration.static'), t(1, 45, 3, 'interface'),
+            t(1, 6, 1, 'class.declaration'), t(1, 26, 1, 'property.declaration.static.readonly'), t(1, 40, 3, 'property.declaration.static'), t(1, 45, 3, 'interface.defaultLibrary'),
             t(2, 11, 1, 'enum.declaration'), t(2, 15, 1, 'enumMember.declaration.readonly'), t(2, 22, 1, 'enumMember.declaration.readonly'), t(2, 26, 1, 'enumMember.readonly'),
-            t(3, 0, 7, 'variable'), t(3, 8, 3, 'member'), t(3, 12, 1, 'variable.readonly'), t(3, 16, 1, 'class'), t(3, 18, 1, 'property.static.readonly'), t(3, 22, 1, 'class'), t(3, 24, 3, 'property.static'), t(3, 28, 6, 'property.readonly'), t(3, 37, 1, 'enum'), t(3, 39, 1, 'enumMember.readonly')
+            t(3, 0, 7, 'variable.defaultLibrary'), t(3, 8, 3, 'member.defaultLibrary'), t(3, 12, 1, 'variable.readonly'), t(3, 16, 1, 'class'), t(3, 18, 1, 'property.static.readonly'), t(3, 22, 1, 'class'), t(3, 24, 3, 'property.static'), t(3, 28, 6, 'property.readonly.defaultLibrary'), t(3, 37, 1, 'enum'), t(3, 39, 1, 'enumMember.readonly')
         ]);
     });
 
@@ -378,9 +379,9 @@ suite('HTML Semantic Tokens', () => {
 			/*3*/'}',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
-            t(0, 5, 5, 'type.declaration'), t(0, 13, 3, 'interface'),
+            t(0, 5, 5, 'type.declaration'), t(0, 13, 3, 'interface.defaultLibrary'),
             t(1, 9, 1, 'function.declaration'), t(1, 11, 1, 'typeParameter.declaration'), t(1, 21, 5, 'type'), t(1, 28, 1, 'parameter.declaration'), t(1, 31, 1, 'typeParameter'), t(1, 45, 1, 'typeParameter'),
-            t(2, 10, 1, 'typeParameter'), t(2, 27, 3, 'class'), t(2, 39, 5, 'type')
+            t(2, 10, 1, 'typeParameter'), t(2, 27, 3, 'class.defaultLibrary'), t(2, 39, 5, 'type')
         ]);
     });
 
@@ -393,11 +394,11 @@ suite('HTML Semantic Tokens', () => {
             /*4*/'new window.Date()'
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
-            t(0, 4, 3, 'class'),
+            t(0, 4, 3, 'class.defaultLibrary'),
             t(1, 6, 1, 'class.declaration'), t(1, 15, 1, 'class'),
             t(2, 6, 1, 'class.declaration'), t(2, 22, 1, 'parameter.declaration'), t(2, 41, 1, 'class'),
-            t(3, 4, 4, 'class'),
-            t(4, 4, 6, 'variable'), t(4, 11, 4, 'class')
+            t(3, 4, 4, 'class.defaultLibrary'),
+            t(4, 4, 6, 'variable.defaultLibrary'), t(4, 11, 4, 'class.defaultLibrary')
         ]);
     });
 
@@ -415,6 +416,21 @@ suite('HTML Semantic Tokens', () => {
         assertTokens('main.ts', { 'main.ts': input, 'other.ts': other }, [
             /*t(0, 9, 1, 'class'), t(0, 12, 1, 'interface'), t(0, 15, 1, 'function'), t(0, 18, 1, 'variable.readonly'),*/
             t(1, 0, 1, 'class'), t(1, 2, 1, 'property.static'), t(1, 10, 1, 'function'), t(1, 16, 1, 'variable.readonly')
+        ]);
+    }); WeakMap
+
+    test('Library', () => {
+        const input = [
+            /*0*/'new WeakMap<Function, Array<RegExp>);',
+            /*1*/`console.log(eval('x + y'));`,
+            /*2*/`Promise<ReadableStream | WebSocket | null>.resolve(null);`,
+            /*3*/`setTimeout(s => { encodeURIComponent('abc'.replace('a', 'b'));})`
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 4, 7, 'class.defaultLibrary'), t(0, 12, 8, 'class.defaultLibrary'), t(0, 22, 5, 'class.defaultLibrary'), t(0, 28, 6, 'interface.defaultLibrary'),
+            t(1, 0, 7, 'variable.defaultLibrary'), t(1, 8, 3, 'member.defaultLibrary'), t(1, 12, 4, 'function.defaultLibrary'),
+            t(2, 0, 7, 'class.defaultLibrary'), t(2, 8, 14, 'interface.defaultLibrary'), t(2, 25, 9, 'interface.defaultLibrary'),
+            t(3, 0, 10, 'function.defaultLibrary'), t(3, 11, 1, 'parameter.declaration'), t(3, 18, 18, 'function.defaultLibrary'), t(3, 43, 7, 'member.defaultLibrary')
         ]);
     });
 

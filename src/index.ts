@@ -52,22 +52,18 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		const collector = (node: ts.Node, typeIdx: number, modifierSet: number) => {
 			resultTokens.push(node.getStart(), node.getWidth(), ((typeIdx + 1) << TokenEncodingConsts.typeOffset) + modifierSet);
 		};
-		collectTokens(jsLanguageService, fileName, span, collector);
-
+		const program = jsLanguageService.getProgram();
+		if (program) {
+			const sourceFile = program.getSourceFile(fileName);
+			if (sourceFile) {
+				collectTokens(program, sourceFile, span, collector);
+			}
+		}
 		return resultTokens;
 	}
 
-	function collectTokens(jsLanguageService: ts.LanguageService, fileName: string, span: ts.TextSpan, collector: (node: ts.Node, tokenType: number, tokenModifier: number) => void) {
-		const program = jsLanguageService.getProgram();
-		if (!program) {
-			return;
-		}
+	function collectTokens(program: ts.Program, sourceFile: ts.SourceFile, span: ts.TextSpan, collector: (node: ts.Node, tokenType: number, tokenModifier: number) => void) {
 		const typeChecker = program.getTypeChecker();
-
-		const sourceFile = program.getSourceFile(fileName);
-		if (!sourceFile) {
-			return;
-		}
 
 		let inJSXElement = false;
 
@@ -107,20 +103,26 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 						typeIdx = reclassifyByType(typeChecker, node, typeIdx);
 
 						const decl = symbol.valueDeclaration;
-						const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
-						const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
-						if (modifiers & ts.ModifierFlags.Static) {
-							modifierSet |= 1 << TokenModifier.static;
+						if (decl) {
+							const modifiers = ts.getCombinedModifierFlags(decl);
+							const nodeFlags = ts.getCombinedNodeFlags(decl);
+							if (modifiers & ts.ModifierFlags.Static) {
+								modifierSet |= 1 << TokenModifier.static;
+							}
+							if (modifiers & ts.ModifierFlags.Async) {
+								modifierSet |= 1 << TokenModifier.async;
+							}
+							if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
+								modifierSet |= 1 << TokenModifier.readonly;
+							}
+							if ((typeIdx === TokenType.variable || typeIdx === TokenType.function) && isLocalDeclaration(decl, sourceFile)) {
+								modifierSet |= 1 << TokenModifier.local;
+							}
+							if (program.isSourceFileDefaultLibrary(decl.getSourceFile())) {
+								modifierSet |= 1 << TokenModifier.defaultLibrary;
+							}
 						}
-						if (modifiers & ts.ModifierFlags.Async) {
-							modifierSet |= 1 << TokenModifier.async;
-						}
-						if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
-							modifierSet |= 1 << TokenModifier.readonly;
-						}
-						if ((typeIdx === TokenType.variable || typeIdx === TokenType.function) && decl && isLocalDeclaration(decl, sourceFile!)) {
-							modifierSet |= 1 << TokenModifier.local;
-						}
+
 						collector(node, typeIdx, modifierSet);
 
 					}
@@ -131,8 +133,6 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			inJSXElement = prevInJSXElement;
 		}
 		visit(sourceFile);
-
-
 	}
 
 	function classifySymbol(symbol: ts.Symbol, meaning: SemanticMeaning): TokenType | undefined {
