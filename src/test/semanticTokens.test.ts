@@ -287,18 +287,22 @@ suite('HTML Semantic Tokens', () => {
             t(7, 4, 1, 'variable.declaration'), t(7, 21, 3, 'property.declaration'),
         ]);
     });
-    BigInt64Array
+    
     test('Callable Variables & Properties 2', () => {
         const input = [
             /*0*/'import "node";',
             /*1*/'var fs = require("fs")',
             /*2*/`require.resolve('react');`,
-            /*3*/`require.resolve.paths;`
+            /*3*/`require.resolve.paths;`,
+            /*4*/`interface LanguageMode { getFoldingRanges?: (d: string) => number[]; };`,
+            /*5*/`function (mode: LanguageMode | undefined) { if (mode && mode.getFoldingRanges) { return mode.getFoldingRanges('a'); }};`
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(1, 4, 2, 'variable.declaration'), t(1, 9, 7, 'function'),
             t(2, 0, 7, 'variable'), t(2, 8, 7, 'member'),
-            t(3, 0, 7, 'variable'), t(3, 8, 7, 'property'), t(3, 16, 5, 'member')
+            t(3, 0, 7, 'variable'), t(3, 8, 7, 'property'), t(3, 16, 5, 'member'),
+            t(4, 10, 12, 'interface.declaration'), t(4, 25, 16, 'member.declaration'), t(4, 45, 1, 'parameter.declaration'),
+            t(5, 10, 4, 'parameter.declaration'), t(5, 16, 12, 'interface'), t(5, 48, 4, 'parameter'), t(5, 56, 4, 'parameter'), t(5, 61, 16, 'member'), t(5, 88, 4, 'parameter'), t(5, 93, 16, 'member')
         ]);
     });
 
@@ -421,15 +425,15 @@ suite('HTML Semantic Tokens', () => {
 
     test('Library', () => {
         const input = [
-            /*0*/'new WeakMap<Function, Array<RegExp>);',
+            /*0*/'new WeakMap<Function, Array<RegExp>>();',
             /*1*/`console.log(eval('x + y'));`,
-            /*2*/`Promise<ReadableStream | WebSocket | null>.resolve(null);`,
+            /*2*/`Promise.resolve<ReadableStream | WebSocket | null>(null);`,
             /*3*/`setTimeout(s => { encodeURIComponent('abc'.replace('a', 'b'));})`
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
-            t(0, 4, 7, 'class.defaultLibrary'), t(0, 12, 8, 'class.defaultLibrary'), t(0, 22, 5, 'class.defaultLibrary'), t(0, 28, 6, 'interface.defaultLibrary'),
+            t(0, 4, 7, 'class.defaultLibrary'), t(0, 12, 8, 'interface.defaultLibrary'), t(0, 22, 5, 'interface.defaultLibrary'), t(0, 28, 6, 'interface.defaultLibrary'),
             t(1, 0, 7, 'variable.defaultLibrary'), t(1, 8, 3, 'member.defaultLibrary'), t(1, 12, 4, 'function.defaultLibrary'),
-            t(2, 0, 7, 'class.defaultLibrary'), t(2, 8, 14, 'interface.defaultLibrary'), t(2, 25, 9, 'interface.defaultLibrary'),
+            t(2, 0, 7, 'class.defaultLibrary'), t(2, 8, 7, 'member.defaultLibrary'), t(2, 16, 14, 'interface.defaultLibrary'), t(2, 33, 9, 'interface.defaultLibrary'),
             t(3, 0, 10, 'function.defaultLibrary'), t(3, 11, 1, 'parameter.declaration'), t(3, 18, 18, 'function.defaultLibrary'), t(3, 43, 7, 'member.defaultLibrary')
         ]);
     });
