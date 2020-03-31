@@ -30,33 +30,50 @@ All new classifications have a value >= 0x100 to not overlap with the old classi
 
 ### Implemented Features
 
-Examples for each feature can be seen in the [test cases](https://github.com/aeschli/typescript-vscode-sh-plugin/blob/master/src/test/semanticTokens.test.ts).
+Examples for each feature can be seen in the [test cases](https://github.com/aeschli/typescript-vscode-sh-plugin/blob/master/src/test/semanticTokens.test.ts). To try them out in VSCode, copy the added snippet to a `TypeScript` editor and use the `Developer: Inspect Editor Tokens and Scopes` command to see the semantic token information ar the current cursor location.
 
 
 - all token types listed above
   - classification for all declarations and references
   - modifier `declaration` when on the identifier of the declaration node
-
+    ```
+      class A { field: number; member(param: number) { let var= param + this.field; } }
+    ```
+  - modifier `defaultLibrary` when in an symbol that comes from the default libraries.
+    ```
+      Math.max(Number.Nan, parseInt('33'))
+    ```
 - variables, properties and parameters
   - modifier `readonly` when defined as `const` or `readonly`
+    ```
+      const var;
+    ```
   - modifier `local` when not declared top-level
-- object literal keys are currently also classified as properties (to be discussed)
+    ```
+       function global(p: number) { const global; 
+    ```
 - functions and members
   - modifier `async` when defined as `async`
   - modifier `static` when defined as `static`
-- callable variables & properties
-  - variables and properties that are function types are classified as function resp member
-  - feature request: [#89337](https://github.com/microsoft/vscode/issues/89337).
-  - if the type is callable but also has properties. E.g. `Number`, `String` or `Object` [#89221](https://github.com/microsoft/vscode/issues/89221), is stays a variable, unless used in a callExpression
-  - still known bugs, e.g. for union types 
-- types, namespace
-  - use the node location to find out when name resolves to multiple symbols (namespace, type or variable)
-  - the constructor function in `new` expressions is always classified as type 
+-variables & properties with constructor signatures
+  - variables & properties that have a constructor type, are classified as `class`
+    ```
+       Number.isInteger(1);
+    ```
+- variables & properties with call signatures
+  - variables, properties and parameters that have a function type (but no properties) are classified as `function` resp `member` ([#89337](https://github.com/microsoft/vscode/issues/89337).)
+    ```
+       const callback = () => {};
+    ```
+  - if the variable/member/parameter type is callable but also has properties, it stays a variable/member/parameter, unless used in a callExpression
+    ```
+       var fs = require('fs); require.resolve('foo/bar');
+    ```
 - jsx 
-  - avoid semantic highlighting for JSX element names (for now): [#88911](https://github.com/microsoft/vscode/issues/88911) [#89224](https://github.com/microsoft/vscode/issues/89224).
+  - no semantic highlighting for JSX element names (for now): [#88911](https://github.com/microsoft/vscode/issues/88911) [#89224](https://github.com/microsoft/vscode/issues/89224).
+- object literal keys are currently also classified as properties (to be discussed)
 
 ### Planned additions
-- modifier `library` for symbols defined in one of the standard runtime libraries
 - add `typeAlias` pas a new token type
 
 
