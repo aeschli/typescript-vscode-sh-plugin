@@ -14,7 +14,7 @@ export const enum TokenType {
 }
 
 export const enum TokenModifier {
-	declaration, static, async, readonly, local
+	declaration, static, async, readonly, local, defaultLibrary
 }
 ```
 
