@@ -61,7 +61,7 @@ Examples for each feature can be seen in the [test cases](https://github.com/aes
        Number.isInteger(1);
     ```
 - variables & properties with call signatures
-  - variables, properties and parameters that have a function type (but no properties) are classified as `function` resp `member` ([#89337](https://github.com/microsoft/vscode/issues/89337).)
+  - variables, properties and parameters that have a function type (but no properties) are classified as `function` resp `member` ([#89337](https://github.com/microsoft/vscode/issues/89337))
     ```
        const callback = () => {};
     ```
@@ -71,11 +71,11 @@ Examples for each feature can be seen in the [test cases](https://github.com/aes
     ```
 - jsx 
   - no semantic highlighting for JSX element names (for now): [#88911](https://github.com/microsoft/vscode/issues/88911) [#89224](https://github.com/microsoft/vscode/issues/89224).
-- object literal keys are currently also classified as properties (to be discussed)
 
-### Planned additions
+
+### Under discussion
 - add `typeAlias` pas a new token type
-
+- object literal keys are currently also classified as properties
 
 ### Try it out
 
@@ -84,6 +84,7 @@ Examples for each feature can be seen in the [test cases](https://github.com/aes
    `"editor.semanticHighlighting.enabled": true`
 - open a TypeScript or JavaScript file in VSCode and wait for the language server to get active
 - use the `Developer: Inspect Editor Tokens and Scopes` command to inspect the semantic information at a given cursor location.
+
 ![Inspect Editor Tokens](./images/inspect-tokens.png)
 
 
