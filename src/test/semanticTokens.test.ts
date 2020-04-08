@@ -408,7 +408,7 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
-    test.only('BindingElement as parameter', () => {
+    test('BindingElement as parameter', () => {
         const input = [
             /*0*/'interface Person { name: string; age: number; }',
             /*1*/'function greet({ name, age }: Person) {',
@@ -422,7 +422,7 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
-    test.only('BindingElement as variable', () => {
+    test('BindingElement as variable', () => {
         const input = [
             'interface Person { name: string; age: number; }',
             'function loop(persons: Person[]) {',
