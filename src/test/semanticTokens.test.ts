@@ -408,6 +408,39 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
+    test('BindingElement as parameter', () => {
+        const input = [
+            /*0*/'interface Person { name: string; age: number; }',
+            /*1*/'function greet({ name, age }: Person) {',
+            /*2*/'  return `hello ` + name;',
+            /*2*/'}',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 10, 6, 'interface.declaration'), t(0, 19, 4, 'property.declaration'), t(0, 33, 3, 'property.declaration'),
+            t(1, 9, 5, 'function.declaration'), t(1, 17, 4, 'parameter.declaration'), t(1, 23, 3, 'parameter.declaration'), t(1, 30, 6, 'interface'),
+            t(2, 20, 4, 'parameter')
+        ]);
+    });
+
+    test('BindingElement as variable', () => {
+        const input = [
+            'interface Person { name: string; age: number; }',
+            'function loop(persons: Person[]) {',
+            '    let totalAge = 0;',
+            '    for (const { name: localName, age: localAge } of persons) {',
+            '        totalAge += localAge;',
+            '    }',
+            '}',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 10, 6, 'interface.declaration'), t(0, 19, 4, 'property.declaration'), t(0, 33, 3, 'property.declaration'),
+            t(1, 9, 4, 'function.declaration'), t(1, 14, 7, 'parameter.declaration'), t(1, 23, 6, 'interface'),
+            t(2, 8, 8, 'variable.declaration.local'),
+            t(3, 17, 4, 'property'), t(3, 23, 9, 'variable.declaration.readonly.local'), t(3, 34, 3, 'property'), t(3, 39, 8, 'variable.declaration.readonly.local'), t(3, 53, 7, 'parameter'),
+            t(4, 8, 8, 'variable.local'), t(4, 20, 8, 'variable.readonly.local'),
+        ]);
+    });
+
     test('Import', () => {
         const input = [
             /*0*/'import { A, I, f, c as d } from "./other"',
