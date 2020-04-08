@@ -89,8 +89,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 					if (typeIdx !== undefined) {
 						let modifierSet = 0;
 						if (node.parent) {
-							const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
-							if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
+							const parentIsDeclaration = (ts.isBindingElement(node.parent) || tokenFromDeclarationMapping[node.parent.kind] === typeIdx);
+							if (parentIsDeclaration && (<ts.NamedDeclaration>node.parent).name === node) {
 								modifierSet = 1 << TokenModifier.declaration;
 							}
 						}
@@ -150,7 +150,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		} else if (flags & ts.SymbolFlags.TypeParameter) {
 			return TokenType.typeParameter;
 		}
-		const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
+		let decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
+		if (decl && ts.isBindingElement(decl)) {
+			decl = getDeclarationForBindingElement(<ts.BindingElement>decl);
+		}
 		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
 
@@ -174,12 +177,25 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 	}
 
 	function isLocalDeclaration(decl: ts.Declaration, sourceFile: ts.SourceFile): boolean {
+		if (ts.isBindingElement(decl)) {
+			decl = getDeclarationForBindingElement(decl);
+		}
 		if (ts.isVariableDeclaration(decl)) {
 			return (!ts.isSourceFile(decl.parent.parent.parent) || ts.isCatchClause(decl.parent)) && decl.getSourceFile() === sourceFile;
 		} else if (ts.isFunctionDeclaration(decl)) {
 			return !ts.isSourceFile(decl.parent) && decl.getSourceFile() === sourceFile;
 		}
 		return false;
+	}
+
+	function getDeclarationForBindingElement(element: ts.BindingElement): ts.VariableDeclaration | ts.ParameterDeclaration {
+		while (true) {
+			if (element.parent.parent.kind === ts.SyntaxKind.BindingElement) {
+				element = element.parent.parent;
+			} else {
+				return element.parent.parent;
+			}
+		}
 	}
 
 	function inImportClause(node: ts.Node): boolean {
