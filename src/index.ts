@@ -190,7 +190,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 	function getDeclarationForBindingElement(element: ts.BindingElement): ts.VariableDeclaration | ts.ParameterDeclaration {
 		while (true) {
-			if (element.parent.parent.kind === ts.SyntaxKind.BindingElement) {
+			if (ts.isBindingElement(element.parent.parent)) {
 				element = element.parent.parent;
 			} else {
 				return element.parent.parent;
