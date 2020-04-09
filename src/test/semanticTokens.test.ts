@@ -210,7 +210,7 @@ suite('HTML Semantic Tokens', () => {
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 9, 3, 'function.declaration'), t(0, 13, 2, 'parameter.declaration'),
             t(1, 9, 3, 'function'), t(1, 13, 4, 'variable.defaultLibrary'), t(1, 18, 3, 'member.defaultLibrary'), t(1, 22, 2, 'parameter'),
-            t(3, 4, 6, 'variable.defaultLibrary'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member.defaultLibrary'), t(3, 33, 7, 'member.defaultLibrary'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
+            t(3, 4, 6, 'variable.defaultLibrary'), t(3, 11, 8, 'property.defaultLibrary'), t(3, 22, 5, 'member.defaultLibrary'), t(3, 33, 7, 'member.defaultLibrary'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
         ]);
     });
 
@@ -323,15 +323,14 @@ suite('HTML Semantic Tokens', () => {
 
     test('Interfaces', () => {
         const input = [
-			/*0*/'interface Position { x: number, y: number };',
-			/*1*/'const p = { x: 1, y: 2 } as Position;',
-			/*2*/'const foo = (o: Position) => o.x + o.y;',
+			/*0*/'interface Pos { x: number, y: number };',
+			/*1*/'const p = { x: 1, y: 2 } as Pos;',
+			/*2*/'const foo = (o: Pos) => o.x + o.y;',
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
-            t(0, 10, 8, 'interface.declaration'), t(0, 21, 1, 'property.declaration'), t(0, 32, 1, 'property.declaration'),
-            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 12, 1, 'property.declaration'), t(1, 18, 1, 'property.declaration'), t(1, 28, 8, 'interface'),
-            t(2, 6, 3, 'function.declaration.readonly'), t(2, 13, 1, 'parameter.declaration'), t(2, 16, 8, 'interface'), t(2, 29, 1, 'parameter'), t(2, 31, 1, 'property'), t(2, 35, 1, 'parameter'), t(2, 37, 1, 'property')
-        ]);
+            t(0, 10, 3, 'interface.declaration'), t(0, 16, 1, 'property.declaration'), t(0, 27, 1, 'property.declaration'),
+            t(1, 6, 1, 'variable.declaration.readonly'), t(1, 12, 1, 'property.declaration'), t(1, 18, 1, 'property.declaration'), t(1, 28, 3, 'interface'), 
+            t(2, 6, 3, 'function.declaration.readonly'), t(2, 13, 1, 'parameter.declaration'), t(2, 16, 3, 'interface'), t(2, 24, 1, 'parameter'), t(2, 26, 1, 'property'), t(2, 30, 1, 'parameter'), t(2, 32, 1, 'property')        ]);
     });
 
     test('Enums', () => {
@@ -476,13 +475,15 @@ suite('HTML Semantic Tokens', () => {
             /*0*/'new WeakMap<Function, Array<RegExp>>();',
             /*1*/`console.log(eval('x + y'));`,
             /*2*/`Promise.resolve<ReadableStream | WebSocket | null>(null);`,
-            /*3*/`setTimeout(s => { encodeURIComponent('abc'.replace('a', 'b'));})`
+            /*3*/`setTimeout(s => { encodeURIComponent('abc'.replace('a', 'b'));})`,
+            /*4*/'interface Position { x: number, y: number }; const f = (p: Position) => p.x + p.timestamp;'
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 4, 7, 'class.defaultLibrary'), t(0, 12, 8, 'interface.defaultLibrary'), t(0, 22, 5, 'interface.defaultLibrary'), t(0, 28, 6, 'interface.defaultLibrary'),
             t(1, 0, 7, 'variable.defaultLibrary'), t(1, 8, 3, 'member.defaultLibrary'), t(1, 12, 4, 'function.defaultLibrary'),
             t(2, 0, 7, 'class.defaultLibrary'), t(2, 8, 7, 'member.defaultLibrary'), t(2, 16, 14, 'interface.defaultLibrary'), t(2, 33, 9, 'interface.defaultLibrary'),
-            t(3, 0, 10, 'function.defaultLibrary'), t(3, 11, 1, 'parameter.declaration'), t(3, 18, 18, 'function.defaultLibrary'), t(3, 43, 7, 'member.defaultLibrary')
+            t(3, 0, 10, 'function.defaultLibrary'), t(3, 11, 1, 'parameter.declaration'), t(3, 18, 18, 'function.defaultLibrary'), t(3, 43, 7, 'member.defaultLibrary'),
+            t(4, 10, 8, 'interface.declaration.defaultLibrary'), t(4, 21, 1, 'property.declaration'), t(4, 32, 1, 'property.declaration'), t(4, 51, 1, 'function.declaration.readonly'), t(4, 56, 1, 'parameter.declaration'), t(4, 59, 8, 'interface.defaultLibrary'), t(4, 72, 1, 'parameter'), t(4, 74, 1, 'property'), t(4, 78, 1, 'parameter'), t(4, 80, 9, 'property.readonly.defaultLibrary'),
         ]);
     });
 
