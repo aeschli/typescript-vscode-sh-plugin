@@ -486,6 +486,15 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
+    test('Library without value declaration', () => {
+        const input = [
+            /*0*/'type MyIterator = IterableIterator<{ name: string }>;',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 5, 10, 'type.declaration'), t(0, 18, 16, 'interface.defaultLibrary'), t(0, 37, 4, 'property.declaration'),
+        ]);
+    })
+
     test('JSX', () => {
         const input = [
             /*0*/'import * as React from "react";',

@@ -121,6 +121,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							if (program.isSourceFileDefaultLibrary(decl.getSourceFile())) {
 								modifierSet |= 1 << TokenModifier.defaultLibrary;
 							}
+						} else if (symbol.declarations && symbol.declarations.length > 0) {
+							if (program.isSourceFileDefaultLibrary(symbol.declarations[0].getSourceFile())) {
+								modifierSet |= 1 << TokenModifier.defaultLibrary;
+							}
 						}
 
 						collector(node, typeIdx, modifierSet);
