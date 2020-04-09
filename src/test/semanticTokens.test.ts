@@ -441,6 +441,19 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
+    test('FunctionExpression', () => {
+        const input = [
+            'function getSum() {',
+            '    return function sum() {',
+            '    };',
+            '}',
+        ].join('\n');
+        assertTokens('main.ts', { 'main.ts': input }, [
+            t(0, 9, 6, 'function.declaration'),
+            t(1, 20, 3, 'function.declaration'),
+        ]);
+    });
+
     test('Import', () => {
         const input = [
             /*0*/'import { A, I, f, c as d } from "./other"',

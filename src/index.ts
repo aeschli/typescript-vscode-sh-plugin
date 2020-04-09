@@ -240,6 +240,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		[ts.SyntaxKind.ClassDeclaration]: TokenType.class,
 		[ts.SyntaxKind.MethodDeclaration]: TokenType.member,
 		[ts.SyntaxKind.FunctionDeclaration]: TokenType.function,
+		[ts.SyntaxKind.FunctionExpression]: TokenType.function,
 		[ts.SyntaxKind.MethodSignature]: TokenType.member,
 		[ts.SyntaxKind.GetAccessor]: TokenType.property,
 		[ts.SyntaxKind.PropertySignature]: TokenType.property,
