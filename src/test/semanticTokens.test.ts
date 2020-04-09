@@ -473,7 +473,7 @@ suite('HTML Semantic Tokens', () => {
         ]);
     });
 
-    test.only('Library without value declaration', () => {
+    test('Library without value declaration', () => {
         const input = [
             /*0*/'type MyIterator = IterableIterator<{ name: string }>;',
         ].join('\n');
