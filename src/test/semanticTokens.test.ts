@@ -210,7 +210,7 @@ suite('HTML Semantic Tokens', () => {
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 9, 3, 'function.declaration'), t(0, 13, 2, 'parameter.declaration'),
             t(1, 9, 3, 'function'), t(1, 13, 4, 'variable.defaultLibrary'), t(1, 18, 3, 'member.defaultLibrary'), t(1, 22, 2, 'parameter'),
-            t(3, 4, 6, 'variable.defaultLibrary'), t(3, 11, 8, 'property'), t(3, 22, 5, 'member.defaultLibrary'), t(3, 33, 7, 'member.defaultLibrary'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
+            t(3, 4, 6, 'variable.defaultLibrary'), t(3, 11, 8, 'property.defaultLibrary'), t(3, 22, 5, 'member.defaultLibrary'), t(3, 33, 7, 'member.defaultLibrary'), t(3, 41, 1, 'parameter.declaration'), t(3, 46, 3, 'function'), t(3, 50, 1, 'parameter')
         ]);
     });
 
@@ -248,7 +248,7 @@ suite('HTML Semantic Tokens', () => {
             t(1, 10, 1, 'property.declaration'),
             t(2, 21, 1, 'parameter.declaration'), t(2, 33, 2, 'parameter.declaration'), t(2, 53, 1, 'property'), t(2, 57, 2, 'parameter'),
             t(3, 6, 1, 'property.declaration'), t(3, 33, 1, 'property'), t(3, 42, 1, 'property'),
-            t(4, 8, 1, 'parameter.declaration')
+            t(4, 6, 1, 'property.declaration'), t(4, 8, 1, 'parameter.declaration')
         ]);
     });
 

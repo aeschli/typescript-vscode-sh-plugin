@@ -5,9 +5,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
+import * as semanticTokensVisitor from './semanticTokensVisitor';
+
+const computeOracleTokens = false;
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
 	const ts = modules.typescript;
+
+	const newImplementation = semanticTokensVisitor.init(ts);
 
 	function hasVersion(requiredMajor: number, requiredMinor: number) {
 		const parts = ts.version.split('.');
@@ -20,14 +25,36 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		const intercept: Partial<ts.LanguageService> = Object.create(null);
 
 		if (!hasVersion(VersionRequirement.major, VersionRequirement.minor)) {
-			logger?.msg(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`, ts.server.Msg.Info);
+			// logger?.msg(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`, ts.server.Msg.Info);
 			return languageService;
 		}
 		logger?.msg(`typescript-vscode-sh-plugin initialized. Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
 
 		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
+			const start = Date.now();
+			const actualTokens = newImplementation.getEncodedSemanticClassifications(languageService, filename, logger);
+			const duration = Date.now() - start;
+
+			logger?.msg(`COMPUTING ${actualTokens.length / 3} TOOK ${duration}ms !`, ts.server.Msg.Info);
+
+			if (computeOracleTokens) {
+				const oracleTokens = getSemanticTokens(languageService, filename, span);
+				const program = languageService.getProgram();
+				if (program) {
+					const sourceFile = program.getSourceFile(filename);
+					if (sourceFile) {
+						const diffs = newImplementation.compareTokens(sourceFile, actualTokens, oracleTokens);
+						if (diffs.length > 0) {
+							logger?.msg(`REQUEST YIELDED DIFFERENT RESULTS:`, ts.server.Msg.Info);
+							logger?.msg(diffs.join('\n'), ts.server.Msg.Info);
+						} else {
+							logger?.msg(`REQUEST WAS EQUAL IN BOTH TOKENIZERS`);
+						}
+					}
+				}
+			}
 			return {
-				spans: getSemanticTokens(languageService, filename, span),
+				spans: actualTokens,
 				endOfLineState: ts.EndOfLineState.None
 			}
 		};
@@ -89,8 +116,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 					if (typeIdx !== undefined) {
 						let modifierSet = 0;
 						if (node.parent) {
-							const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
-							if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
+							const parentIsDeclaration = (ts.isBindingElement(node.parent) || tokenFromDeclarationMapping[node.parent.kind] === typeIdx);
+							if (parentIsDeclaration && (<ts.NamedDeclaration>node.parent).name === node) {
 								modifierSet = 1 << TokenModifier.declaration;
 							}
 						}
@@ -112,13 +139,19 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							if (modifiers & ts.ModifierFlags.Async) {
 								modifierSet |= 1 << TokenModifier.async;
 							}
-							if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
-								modifierSet |= 1 << TokenModifier.readonly;
+							if (typeIdx !== TokenType.interface) {
+								if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
+									modifierSet |= 1 << TokenModifier.readonly;
+								}
 							}
 							if ((typeIdx === TokenType.variable || typeIdx === TokenType.function) && isLocalDeclaration(decl, sourceFile)) {
 								modifierSet |= 1 << TokenModifier.local;
 							}
 							if (program.isSourceFileDefaultLibrary(decl.getSourceFile())) {
+								modifierSet |= 1 << TokenModifier.defaultLibrary;
+							}
+						} else if (symbol.declarations.length > 0) {
+							if (program.isSourceFileDefaultLibrary(symbol.declarations[0].getSourceFile())) {
 								modifierSet |= 1 << TokenModifier.defaultLibrary;
 							}
 						}
@@ -150,7 +183,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		} else if (flags & ts.SymbolFlags.TypeParameter) {
 			return TokenType.typeParameter;
 		}
-		const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
+		let decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
+		if (decl && decl.kind === ts.SyntaxKind.BindingElement) {
+			decl = findBindingElementParentDeclaration(<ts.BindingElement>decl);
+		}
 		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
 
@@ -173,8 +209,21 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return typeIdx;
 	}
 
+	function findBindingElementParentDeclaration(element: ts.BindingElement): ts.VariableDeclaration | ts.ParameterDeclaration {
+		while (true) {
+			if (element.parent.parent.kind === ts.SyntaxKind.BindingElement) {
+				element = element.parent.parent;
+			} else {
+				return element.parent.parent;
+			}
+		}
+	}
+
 	function isLocalDeclaration(decl: ts.Declaration, sourceFile: ts.SourceFile): boolean {
-		if (ts.isVariableDeclaration(decl)) {
+		if (ts.isBindingElement(decl)) {
+			decl = findBindingElementParentDeclaration(decl);
+		}
+		if (ts.isVariableDeclaration(decl) || ts.isBindingElement(decl)) {
 			return (!ts.isSourceFile(decl.parent.parent.parent) || ts.isCatchClause(decl.parent)) && decl.getSourceFile() === sourceFile;
 		} else if (ts.isFunctionDeclaration(decl)) {
 			return !ts.isSourceFile(decl.parent) && decl.getSourceFile() === sourceFile;
@@ -224,8 +273,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		[ts.SyntaxKind.ClassDeclaration]: TokenType.class,
 		[ts.SyntaxKind.MethodDeclaration]: TokenType.member,
 		[ts.SyntaxKind.FunctionDeclaration]: TokenType.function,
+		[ts.SyntaxKind.FunctionExpression]: TokenType.function,
 		[ts.SyntaxKind.MethodSignature]: TokenType.member,
 		[ts.SyntaxKind.GetAccessor]: TokenType.property,
+		[ts.SyntaxKind.SetAccessor]: TokenType.property,
 		[ts.SyntaxKind.PropertySignature]: TokenType.property,
 		[ts.SyntaxKind.InterfaceDeclaration]: TokenType.interface,
 		[ts.SyntaxKind.TypeAliasDeclaration]: TokenType.type,
