@@ -150,10 +150,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							if (program.isSourceFileDefaultLibrary(decl.getSourceFile())) {
 								modifierSet |= 1 << TokenModifier.defaultLibrary;
 							}
-						} else if (symbol.declarations.length > 0) {
-							if (program.isSourceFileDefaultLibrary(symbol.declarations[0].getSourceFile())) {
-								modifierSet |= 1 << TokenModifier.defaultLibrary;
-							}
+						} else if (symbol.declarations && symbol.declarations.some(d => program.isSourceFileDefaultLibrary(d.getSourceFile()))) {
+							modifierSet |= 1 << TokenModifier.defaultLibrary;
 						}
 
 						collector(node, typeIdx, modifierSet);
@@ -184,8 +182,8 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			return TokenType.typeParameter;
 		}
 		let decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
-		if (decl && decl.kind === ts.SyntaxKind.BindingElement) {
-			decl = findBindingElementParentDeclaration(<ts.BindingElement>decl);
+		if (decl && ts.isBindingElement(decl)) {
+			decl = getDeclarationForBindingElement(<ts.BindingElement>decl);
 		}
 		return decl && tokenFromDeclarationMapping[decl.kind];
 	}
@@ -209,26 +207,26 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		return typeIdx;
 	}
 
-	function findBindingElementParentDeclaration(element: ts.BindingElement): ts.VariableDeclaration | ts.ParameterDeclaration {
-		while (true) {
-			if (element.parent.parent.kind === ts.SyntaxKind.BindingElement) {
-				element = element.parent.parent;
-			} else {
-				return element.parent.parent;
-			}
-		}
-	}
-
 	function isLocalDeclaration(decl: ts.Declaration, sourceFile: ts.SourceFile): boolean {
 		if (ts.isBindingElement(decl)) {
-			decl = findBindingElementParentDeclaration(decl);
+			decl = getDeclarationForBindingElement(decl);
 		}
-		if (ts.isVariableDeclaration(decl) || ts.isBindingElement(decl)) {
+		if (ts.isVariableDeclaration(decl)) {
 			return (!ts.isSourceFile(decl.parent.parent.parent) || ts.isCatchClause(decl.parent)) && decl.getSourceFile() === sourceFile;
 		} else if (ts.isFunctionDeclaration(decl)) {
 			return !ts.isSourceFile(decl.parent) && decl.getSourceFile() === sourceFile;
 		}
 		return false;
+	}
+
+	function getDeclarationForBindingElement(element: ts.BindingElement): ts.VariableDeclaration | ts.ParameterDeclaration {
+		while (true) {
+			if (ts.isBindingElement(element.parent.parent)) {
+				element = element.parent.parent;
+			} else {
+				return element.parent.parent;
+			}
+		}
 	}
 
 	function inImportClause(node: ts.Node): boolean {
