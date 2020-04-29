@@ -230,7 +230,7 @@ suite('HTML Semantic Tokens', () => {
             t(2, 2, 1, 'property.declaration'),
             t(3, 8, 1, 'member.declaration.async'), t(3, 21, 1, 'class'), t(3, 23, 1, 'property.static'), t(3, 38, 1, 'member.async'),
             t(4, 6, 1, 'property.declaration'), t(4, 24, 1, 'property'),
-            t(5, 9, 1, 'member.declaration.static'), t(5, 26, 1, 'class'), t(5, 30, 1, 'property'),
+            t(5, 9, 1, 'member.declaration.static'), t(5, 26, 1, 'class'), t(5, 30, 1, 'property'), //#
         ]);
     });
 
@@ -248,7 +248,7 @@ suite('HTML Semantic Tokens', () => {
             t(1, 10, 1, 'property.declaration'),
             t(2, 21, 1, 'parameter.declaration'), t(2, 33, 2, 'parameter.declaration'), t(2, 53, 1, 'property'), t(2, 57, 2, 'parameter'),
             t(3, 6, 1, 'property.declaration'), t(3, 33, 1, 'property'), t(3, 42, 1, 'property'),
-            t(4, 8, 1, 'parameter.declaration')
+            t(4, 6, 1, 'property.declaration'), t(4, 8, 1, 'parameter.declaration')
         ]);
     });
 
