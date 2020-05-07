@@ -112,8 +112,10 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 							if (modifiers & ts.ModifierFlags.Async) {
 								modifierSet |= 1 << TokenModifier.async;
 							}
-							if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
-								modifierSet |= 1 << TokenModifier.readonly;
+							if (typeIdx !== TokenType.class && typeIdx !== TokenType.interface) {
+								if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
+									modifierSet |= 1 << TokenModifier.readonly;
+								}
 							}
 							if ((typeIdx === TokenType.variable || typeIdx === TokenType.function) && isLocalDeclaration(decl, sourceFile)) {
 								modifierSet |= 1 << TokenModifier.local;
