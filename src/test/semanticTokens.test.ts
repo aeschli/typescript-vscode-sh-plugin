@@ -230,7 +230,7 @@ suite('HTML Semantic Tokens', () => {
             t(2, 2, 1, 'property.declaration'),
             t(3, 8, 1, 'member.declaration.async'), t(3, 21, 1, 'class'), t(3, 23, 1, 'property.static'), t(3, 38, 1, 'member.async'),
             t(4, 6, 1, 'property.declaration'), t(4, 24, 1, 'property'),
-            t(5, 9, 1, 'member.declaration.static'), t(5, 26, 1, 'class'), t(5, 30, 1, 'property'),
+            t(5, 9, 1, 'member.declaration.static'), t(5, 26, 1, 'class'), t(5, 30, 1, 'property'), //#
         ]);
     });
 
