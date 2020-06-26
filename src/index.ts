@@ -12,7 +12,7 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 	function hasVersion(requiredMajor: number, requiredMinor: number) {
 		const parts = ts.version.split('.');
 		const majorVersion = Number(parts[0]);
-		return majorVersion < requiredMajor || ((majorVersion === requiredMajor) && requiredMinor <= Number(parts[1]));
+		return requiredMajor < majorVersion || ((majorVersion === requiredMajor) && requiredMinor <= Number(parts[1]));
 	}
 
 	function decorate(languageService: ts.LanguageService, logger?: ts.server.Logger) {
