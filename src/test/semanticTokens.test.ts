@@ -438,7 +438,7 @@ suite('HTML Semantic Tokens', () => {
             t(3, 17, 4, 'property'), t(3, 23, 9, 'variable.declaration.readonly.local'), t(3, 34, 3, 'property'), t(3, 39, 8, 'variable.declaration.readonly.local'), t(3, 53, 7, 'parameter'),
             t(4, 8, 8, 'variable.local'), t(4, 20, 8, 'variable.readonly.local'),
         ]);
-    });
+    });//asds
 
     test('FunctionExpression', () => {
         const input = [
