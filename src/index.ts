@@ -5,9 +5,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
+import * as semanticTokensVisitor from './semanticTokensVisitor';
+
+const computeOracleTokens = false;
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
 	const ts = modules.typescript;
+
+	const newImplementation = semanticTokensVisitor.init(ts);
 
 	function hasVersion(requiredMajor: number, requiredMinor: number) {
 		const parts = ts.version.split('.');
@@ -20,14 +25,36 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 		const intercept: Partial<ts.LanguageService> = Object.create(null);
 
 		if (!hasVersion(VersionRequirement.major, VersionRequirement.minor)) {
-			logger?.msg(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`, ts.server.Msg.Info);
+			// logger?.msg(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`, ts.server.Msg.Info);
 			return languageService;
 		}
 		logger?.msg(`typescript-vscode-sh-plugin initialized. Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
 
 		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
+			const start = Date.now();
+			const actualTokens = newImplementation.getEncodedSemanticClassifications(languageService, filename, logger);
+			const duration = Date.now() - start;
+
+			logger?.msg(`COMPUTING ${actualTokens.length / 3} TOOK ${duration}ms !`, ts.server.Msg.Info);
+
+			if (computeOracleTokens) {
+				const oracleTokens = getSemanticTokens(languageService, filename, span);
+				const program = languageService.getProgram();
+				if (program) {
+					const sourceFile = program.getSourceFile(filename);
+					if (sourceFile) {
+						const diffs = newImplementation.compareTokens(sourceFile, actualTokens, oracleTokens);
+						if (diffs.length > 0) {
+							logger?.msg(`REQUEST YIELDED DIFFERENT RESULTS:`, ts.server.Msg.Info);
+							logger?.msg(diffs.join('\n'), ts.server.Msg.Info);
+						} else {
+							logger?.msg(`REQUEST WAS EQUAL IN BOTH TOKENIZERS`);
+						}
+					}
+				}
+			}
 			return {
-				spans: getSemanticTokens(languageService, filename, span),
+				spans: actualTokens,
 				endOfLineState: ts.EndOfLineState.None
 			}
 		};
