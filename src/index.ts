@@ -7,7 +7,7 @@
 import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
-	const ts = modules.typescript;
+	const ts = modules.typescript; // test
 
 	function hasVersion(requiredMajor: number, requiredMinor: number) {
 		const parts = ts.version.split('.');
