@@ -29,14 +29,11 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 
 		logger?.msg(`typescript-vscode-sh-plugin initialized. Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
 
-		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan, format?: ts.SemanticClassificationFormat) => {
-			if (format === ts.SemanticClassificationFormat.TwentyTwenty) {
-				return {
-					spans: getSemanticTokens(languageService, filename, span),
-					endOfLineState: ts.EndOfLineState.None
-				}
+		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
+			return {
+				spans: getSemanticTokens(languageService, filename, span),
+				endOfLineState: ts.EndOfLineState.None
 			}
-			return languageService.getEncodedSemanticClassifications(filename, span, format);
 		};
 
 		intercept.getEncodedSyntacticClassifications = (_filename: string, _span: ts.TextSpan) => {
