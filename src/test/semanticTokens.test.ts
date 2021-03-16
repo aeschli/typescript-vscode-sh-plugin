@@ -161,7 +161,7 @@ function assertTokens(mainFileName: string, files: { [name: string]: string } = 
         }
     }
 
-    const result = languageService.getEncodedSemanticClassifications(mainFilePath, span);
+    const result = languageService.getEncodedSemanticClassifications(mainFilePath, span, ts.SemanticClassificationFormat.TwentyTwenty);
 
     const sourceFile = languageService.getProgram()?.getSourceFile(mainFilePath)!;
     let actualRanges = [];
@@ -476,14 +476,12 @@ suite('HTML Semantic Tokens', () => {
             /*1*/`console.log(eval('x + y'));`,
             /*2*/`Promise.resolve<ReadableStream | WebSocket | null>(null);`,
             /*3*/`setTimeout(s => { encodeURIComponent('abc'.replace('a', 'b'));})`,
-            /*4*/'interface Position { x: number, y: number }; const f = (p: Position) => p.x + p.timestamp;'
         ].join('\n');
         assertTokens('main.ts', { 'main.ts': input }, [
             t(0, 4, 7, 'class.defaultLibrary'), t(0, 12, 8, 'interface.defaultLibrary'), t(0, 22, 5, 'interface.defaultLibrary'), t(0, 28, 6, 'interface.defaultLibrary'),
             t(1, 0, 7, 'variable.defaultLibrary'), t(1, 8, 3, 'member.defaultLibrary'), t(1, 12, 4, 'function.defaultLibrary'),
             t(2, 0, 7, 'class.defaultLibrary'), t(2, 8, 7, 'member.defaultLibrary'), t(2, 16, 14, 'interface.defaultLibrary'), t(2, 33, 9, 'interface.defaultLibrary'),
             t(3, 0, 10, 'function.defaultLibrary'), t(3, 11, 1, 'parameter.declaration'), t(3, 18, 18, 'function.defaultLibrary'), t(3, 43, 7, 'member.defaultLibrary'),
-            t(4, 10, 8, 'interface.declaration.defaultLibrary'), t(4, 21, 1, 'property.declaration'), t(4, 32, 1, 'property.declaration'), t(4, 51, 1, 'function.declaration.readonly'), t(4, 56, 1, 'parameter.declaration'), t(4, 59, 8, 'interface.defaultLibrary'), t(4, 72, 1, 'parameter'), t(4, 74, 1, 'property'), t(4, 78, 1, 'parameter'), t(4, 80, 9, 'property.readonly.defaultLibrary'),
         ]);
     });
 

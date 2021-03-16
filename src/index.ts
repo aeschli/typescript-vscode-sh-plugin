@@ -4,32 +4,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import ts from 'typescript/lib/tsserverlibrary';
 import { TokenType, TokenModifier, TokenEncodingConsts, VersionRequirement } from './constants';
 
 export = function init(modules: { typescript: typeof import("typescript/lib/tsserverlibrary") }) {
 	const ts = modules.typescript;
+	const [majorVersion, minorVersion] = ts.version.split('.').map(p => Number(p));
 
-	function hasVersion(requiredMajor: number, requiredMinor: number) {
-		const parts = ts.version.split('.');
-		const majorVersion = Number(parts[0]);
-		return requiredMajor < majorVersion || ((majorVersion === requiredMajor) && requiredMinor <= Number(parts[1]));
+	function checkRequiredVersion(requiredMajor: number, requiredMinor: number) {
+		return requiredMajor < majorVersion || ((majorVersion === requiredMajor) && requiredMinor <= minorVersion);
 	}
 
 	function decorate(languageService: ts.LanguageService, logger?: ts.server.Logger) {
-
 		const intercept: Partial<ts.LanguageService> = Object.create(null);
 
-		if (!hasVersion(VersionRequirement.major, VersionRequirement.minor)) {
+		if (!checkRequiredVersion(VersionRequirement.major, VersionRequirement.minor)) {
 			logger?.msg(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`, ts.server.Msg.Info);
 			return languageService;
 		}
+		if (majorVersion > 4 || majorVersion === 4 && minorVersion >= 2) {
+			logger?.msg(`typescript-vscode-sh-plugin not active for version >= 4.2, is ${ts.version}`, ts.server.Msg.Info);
+			return languageService;
+		}
+
 		logger?.msg(`typescript-vscode-sh-plugin initialized. Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
 
-		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
-			return {
-				spans: getSemanticTokens(languageService, filename, span),
-				endOfLineState: ts.EndOfLineState.None
+		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan, format?: ts.SemanticClassificationFormat) => {
+			if (format === ts.SemanticClassificationFormat.TwentyTwenty) {
+				return {
+					spans: getSemanticTokens(languageService, filename, span),
+					endOfLineState: ts.EndOfLineState.None
+				}
 			}
+			return languageService.getEncodedSemanticClassifications(filename, span, format);
 		};
 
 		intercept.getEncodedSyntacticClassifications = (_filename: string, _span: ts.TextSpan) => {
