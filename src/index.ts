@@ -23,15 +23,12 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			return languageService;
 		}
 
-		const overrideSemanticClassification = majorVersion < 4 || majorVersion === 4 && minorVersion < 2;
-		if (overrideSemanticClassification) {
-			logger?.msg(`typescript-vscode-sh-plugin active for version < 4.2 and JS/JSX files. Current version : ${ts.version}`, ts.server.Msg.Info);
-			return languageService;
-		}
-		logger?.msg(`typescript-vscode-sh-plugin initialized. Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
+		const olderThan42 = majorVersion < 4 || majorVersion === 4 && minorVersion < 2;
+		logger?.msg(`typescript-vscode-sh-plugin active for version < 4.2 and JS/JSX files. Current version : ${ts.version}`, ts.server.Msg.Info);
+		logger?.msg(`Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
 
 		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan, format?: ts.SemanticClassificationFormat) => {
-			if (overrideSemanticClassification || filename.match(/\.js(x)?$/)) {
+			if (olderThan42 || filename.match(/\.js(x)?$/)) {
 				return {
 					spans: getSemanticTokens(languageService, filename, span),
 					endOfLineState: ts.EndOfLineState.None
