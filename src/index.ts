@@ -22,18 +22,22 @@ export = function init(modules: { typescript: typeof import("typescript/lib/tsse
 			logger?.msg(`typescript-vscode-sh-plugin not active, version ${VersionRequirement.major}.${VersionRequirement.minor} required, is ${ts.version}`, ts.server.Msg.Info);
 			return languageService;
 		}
-		if (majorVersion > 4 || majorVersion === 4 && minorVersion >= 2) {
-			logger?.msg(`typescript-vscode-sh-plugin not active for version >= 4.2, is ${ts.version}`, ts.server.Msg.Info);
+
+		const overrideSemanticClassification = majorVersion < 4 || majorVersion === 4 && minorVersion < 2;
+		if (overrideSemanticClassification) {
+			logger?.msg(`typescript-vscode-sh-plugin active for version < 4.2 and JS/JSX files. Current version : ${ts.version}`, ts.server.Msg.Info);
 			return languageService;
 		}
-
 		logger?.msg(`typescript-vscode-sh-plugin initialized. Intercepting getEncodedSemanticClassifications and getEncodedSyntacticClassifications.`, ts.server.Msg.Info);
 
-		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan) => {
-			return {
-				spans: getSemanticTokens(languageService, filename, span),
-				endOfLineState: ts.EndOfLineState.None
+		intercept.getEncodedSemanticClassifications = (filename: string, span: ts.TextSpan, format?: ts.SemanticClassificationFormat) => {
+			if (overrideSemanticClassification || filename.match(/\.js(x)?$/)) {
+				return {
+					spans: getSemanticTokens(languageService, filename, span),
+					endOfLineState: ts.EndOfLineState.None
+				}
 			}
+			return languageService.getEncodedSemanticClassifications(filename, span, format);
 		};
 
 		intercept.getEncodedSyntacticClassifications = (_filename: string, _span: ts.TextSpan) => {

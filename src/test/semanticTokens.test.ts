@@ -494,7 +494,7 @@ suite('HTML Semantic Tokens', () => {
         ]);
     })
 
-    test('JSX', () => {
+    test('TSX', () => {
         const input = [
             /*0*/'import * as React from "react";',
             /*1*/'function () {',
@@ -515,9 +515,19 @@ suite('HTML Semantic Tokens', () => {
             /*2*/'  return <MyComponent { ...props } />;',
             /*3*/'}',
         ].join('\n');
-        assertTokens('main.tsx', { 'main.tsx': input }, [
+        assertTokens('main.jsx', { 'main.jsx': input }, [
             t(0, 6, 11, 'function.declaration.readonly'), t(0, 21, 5, 'parameter.declaration'),
             t(1, 6, 9, 'function.declaration.readonly'), t(1, 19, 5, 'parameter.declaration')
+        ]);
+    });
+
+
+    test('JS', () => {
+        const input = [
+            /*0*/'function foo(x, base) { return -Number.parseInt(x, base); }',
+        ].join('\n');
+        assertTokens('main.js', { 'main.js': input }, [
+            t(0, 9, 3, 'function.declaration'), t(0, 13, 1, 'parameter.declaration'), t(0, 16, 4, 'parameter.declaration'), t(0, 32, 6, 'class.defaultLibrary'), t(0, 39, 8, 'member.defaultLibrary'), t(0, 48, 1, 'parameter'), t(0, 51, 4, 'parameter')
         ]);
     });
 });
