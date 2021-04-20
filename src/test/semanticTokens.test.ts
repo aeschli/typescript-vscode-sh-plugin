@@ -530,4 +530,14 @@ suite('HTML Semantic Tokens', () => {
             t(0, 9, 3, 'function.declaration'), t(0, 13, 1, 'parameter.declaration'), t(0, 16, 4, 'parameter.declaration'), t(0, 32, 6, 'class.defaultLibrary'), t(0, 39, 8, 'member.defaultLibrary'), t(0, 48, 1, 'parameter'), t(0, 51, 4, 'parameter')
         ]);
     });
+
+    // test for https://github.com/microsoft/TypeScript/issues/43747
+    // test('JS', () => {
+    //     const input = [
+    //         /*0*/'var test = { find: function () { this.text = null } }',
+    //     ].join('\n');
+    //     assertTokens('main.js', { 'main.js': input }, [
+    //         t(0, 4, 4, 'variable.declaration'), t(0, 13, 4, 'function.declaration')
+    //     ]);
+    // });
 });
