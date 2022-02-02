@@ -1,3 +1,12 @@
+
+## REPOSITORY IS ARCHIVED
+
+***The plugin is obsolete: TypeScript 4.x has adopted the extended semantic highlighting implemented by this plugin.
+The repository is no longer maintained***
+
+
+--------
+
 A [TypeScript plugin](https://github.com/Microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin) that replaces `getEncodedSemanticClassifications` and `getEncodedSyntacticClassifications` to provide more classifications to be used by the new [Semantic Highlighting APIs](https://github.com/microsoft/vscode/wiki/Semantic-Highlighting-Overview) in VS Code.
 
 The purpose of this plugin is to test and enable the new VS Code semantic highlight capabilities. 
